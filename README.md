@@ -1,2 +1,1 @@
-This is a Java project template for the Luna version of Eclipse JDT and
-Eclipse m2e. It also enables the FindBugs builder.
+**reasm-core** is a generic assembler platform written in Java.
