@@ -84,6 +84,11 @@ public abstract class AssemblyMessage {
         return this.text;
     }
 
+    @Override
+    public String toString() {
+        return this.getClass().getName() + ": " + this.text;
+    }
+
     /**
      * Adds this message to an assembly.
      *
