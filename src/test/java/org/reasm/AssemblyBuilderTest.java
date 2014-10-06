@@ -303,15 +303,15 @@ public class AssemblyBuilderTest {
     }
 
     /**
-     * Asserts that {@link AssemblyBuilder#enterChildContext(Iterable, AssemblyStepIterationController, boolean)} throws a
+     * Asserts that {@link AssemblyBuilder#enterBlock(Iterable, AssemblyStepIterationController, boolean, BlockEvents)} throws a
      * {@link NullPointerException} when the <code>sourceLocations</code> argument is <code>null</code>.
      */
     @Test
-    public void enterChildContextNullSourceLocations() {
-        final TestSourceNode node = new TestNullPointerExceptionSourceNode<Iterable<SourceLocation>>("enterChildContext()") {
+    public void enterBlockNullSourceLocations() {
+        final TestSourceNode node = new TestNullPointerExceptionSourceNode<Iterable<SourceLocation>>("enterBlock()") {
             @Override
             void assembleCore3(AssemblyBuilder builder, Iterable<SourceLocation> nil) {
-                builder.enterChildContext(nil, null, false);
+                builder.enterBlock(nil, null, false, null);
             }
         };
 
@@ -319,15 +319,15 @@ public class AssemblyBuilderTest {
     }
 
     /**
-     * Asserts that {@link AssemblyBuilder#enterChildFile(AbstractSourceFile, Architecture)} throws a {@link NullPointerException}
-     * when the <code>file</code> argument is <code>null</code>.
+     * Asserts that {@link AssemblyBuilder#enterFile(AbstractSourceFile, Architecture)} throws a {@link NullPointerException} when
+     * the <code>file</code> argument is <code>null</code>.
      */
     @Test
-    public void enterChildFileNullFile() {
-        final TestSourceNode node = new TestNullPointerExceptionSourceNode<AbstractSourceFile<?>>("enterChildFile()") {
+    public void enterFileNullFile() {
+        final TestSourceNode node = new TestNullPointerExceptionSourceNode<AbstractSourceFile<?>>("enterFile()") {
             @Override
             void assembleCore3(AssemblyBuilder builder, AbstractSourceFile<?> nil) {
-                builder.enterChildFile(nil, NullArchitecture.DEFAULT);
+                builder.enterFile(nil, NullArchitecture.DEFAULT);
             }
         };
 

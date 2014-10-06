@@ -200,15 +200,34 @@ public final class AssemblyBuilder {
      * @param transparentParent
      *            <code>true</code> if the parent should not be represented in the full path of the {@link AssemblyStepLocation}
      *            objects to be created, or <code>false</code> if it should
+     * @param events
+     *            an object that receives events concerning the block
      */
-    public final void enterChildContext(@Nonnull Iterable<SourceLocation> sourceLocations,
-            @CheckForNull AssemblyStepIterationController iterationController, boolean transparentParent) {
+    public final void enterBlock(@Nonnull Iterable<SourceLocation> sourceLocations,
+            @CheckForNull AssemblyStepIterationController iterationController, boolean transparentParent,
+            @CheckForNull BlockEvents events) {
         if (sourceLocations == null) {
             throw new NullPointerException("sourceLocations");
         }
 
         this.checkState();
-        this.assembly.enterChildContext(sourceLocations, iterationController, this.step, transparentParent);
+        this.assembly.enterBlock(sourceLocations, iterationController, this.step, transparentParent, events);
+    }
+
+    /**
+     * Saves the current location, then sets the current location in this assembly to the first child source node of the
+     * {@link CompositeSourceNode} at the current location. When the end of that source node's children is reached, the previous
+     * location is restored and assembly goes on from the following source location.
+     *
+     * @param transparentParent
+     *            <code>true</code> if the parent should not be represented in the full path of the {@link AssemblyStepLocation}
+     *            objects to be created, or <code>false</code> if it should
+     * @param events
+     *            an object that receives events concerning the block
+     */
+    public final void enterComposite(boolean transparentParent, @CheckForNull BlockEvents events) {
+        this.checkState();
+        this.assembly.enterComposite(this.step, transparentParent, events);
     }
 
     /**
@@ -222,27 +241,13 @@ public final class AssemblyBuilder {
      *            the architecture under which the source file will be parsed and assembled. Specify <code>null</code> to use the
      *            architecture of the current file.
      */
-    public final void enterChildFile(@Nonnull AbstractSourceFile<?> file, @CheckForNull Architecture architecture) {
+    public final void enterFile(@Nonnull AbstractSourceFile<?> file, @CheckForNull Architecture architecture) {
         if (file == null) {
             throw new NullPointerException("file");
         }
 
         this.checkState();
-        this.assembly.enterChildFile(file, architecture, this.step);
-    }
-
-    /**
-     * Saves the current location, then sets the current location in this assembly to the first child source node of the
-     * {@link CompositeSourceNode} at the current location. When the end of that source node's children is reached, the previous
-     * location is restored and assembly goes on from the following source location.
-     *
-     * @param transparentParent
-     *            <code>true</code> if the parent should not be represented in the full path of the {@link AssemblyStepLocation}
-     *            objects to be created, or <code>false</code> if it should
-     */
-    public final void enterComposite(boolean transparentParent) {
-        this.checkState();
-        this.assembly.enterComposite(this.step, transparentParent);
+        this.assembly.enterFile(file, architecture, this.step);
     }
 
     /**
@@ -303,6 +308,17 @@ public final class AssemblyBuilder {
      */
     public final Assembly getAssembly() {
         return this.assembly;
+    }
+
+    /**
+     * Gets the block currently being assembled in the assembly that this AssemblyBuilder manages.
+     *
+     * @return the current block
+     */
+    @Nonnull
+    public final Block getCurrentBlock() {
+        this.checkState();
+        return this.assembly.getCurrentBlock();
     }
 
     /**

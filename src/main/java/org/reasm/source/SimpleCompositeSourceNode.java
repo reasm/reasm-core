@@ -25,7 +25,7 @@ public final class SimpleCompositeSourceNode extends CompositeSourceNode {
 
     @Override
     protected void assembleCore(@Nonnull AssemblyBuilder builder) {
-        builder.enterComposite(true);
+        builder.enterComposite(true, null);
     }
 
 }

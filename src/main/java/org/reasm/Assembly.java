@@ -147,7 +147,7 @@ public final class Assembly {
     @Nonnull
     private final ArrayList<SymbolReference> symbolReferences = new ArrayList<>();
     @Nonnull
-    private final ArrayList<AssemblyStepLocationGenerator> stepLocationGeneratorStack = new ArrayList<>();
+    private final ArrayList<Block> blockStack = new ArrayList<>();
     @Nonnull
     private final ArrayList<AssemblyStep> steps = new ArrayList<>(1000);
     @Nonnull
@@ -524,9 +524,9 @@ public final class Assembly {
             try {
                 // Create the assembly step.
                 final TransformationBlock activeTransformationBlock = this.getActiveTransformationBlock();
-                final AssemblyStep step = new AssemblyStep(this.stepLocationGeneratorStack.get(
-                        this.stepLocationGeneratorStack.size() - 1).next(), this.programCounter,
-                        activeTransformationBlock != null ? activeTransformationBlock.getOutput() : this.output);
+                final AssemblyStep step = new AssemblyStep(this.blockStack.get(this.blockStack.size() - 1).nextLocation(),
+                        this.programCounter, activeTransformationBlock != null ? activeTransformationBlock.getOutput()
+                                : this.output);
 
                 this.steps.add(step);
 
@@ -550,12 +550,12 @@ public final class Assembly {
                 }
 
                 // Pop location iterators whose end has been reached off the stack.
-                while (!this.stepLocationGeneratorStack.isEmpty()
-                        && !this.stepLocationGeneratorStack.get(this.stepLocationGeneratorStack.size() - 1).hasNext()) {
-                    this.stepLocationGeneratorStack.remove(this.stepLocationGeneratorStack.size() - 1);
+                while (!this.blockStack.isEmpty() && !this.blockStack.get(this.blockStack.size() - 1).hasNextLocation()) {
+                    this.blockStack.get(this.blockStack.size() - 1).exitBlock();
+                    this.blockStack.remove(this.blockStack.size() - 1);
                 }
 
-                if (this.endPass || this.stepLocationGeneratorStack.isEmpty()) {
+                if (this.endPass || this.blockStack.isEmpty()) {
                     boolean assemblyRequiresNewPass = false;
                     int numberOfUnresolvedSymbolReferences = 0;
                     for (SymbolReference symbolReference : this.symbolReferences) {
@@ -748,26 +748,30 @@ public final class Assembly {
         step.setHasSideEffects();
     }
 
-    /** @see AssemblyBuilder#enterChildContext(Iterable, AssemblyStepIterationController, boolean) */
-    final void enterChildContext(@Nonnull Iterable<SourceLocation> sourceLocations,
-            @CheckForNull AssemblyStepIterationController iterationController, @Nonnull AssemblyStep step, boolean transparentParent) {
-        this.stepLocationGeneratorStack.add(new AssemblyStepLocationGenerator(sourceLocations, iterationController, step
-                .getLocation(), transparentParent));
+    final void enterBlock(@Nonnull Block block, @Nonnull AssemblyStep step) {
+        this.blockStack.add(block);
 
         step.setHasSideEffects();
     }
 
-    /** @see AssemblyBuilder#enterChildFile(AbstractSourceFile, Architecture) */
-    final void enterChildFile(@Nonnull AbstractSourceFile<?> file, @CheckForNull Architecture architecture,
-            @Nonnull AssemblyStep step) {
-        final Architecture fileArchitecture = architecture == null ? step.getLocation().getSourceLocation().getArchitecture()
-                : architecture;
-        this.enterChildContext(file.getSourceLocations(fileArchitecture), null, step, false);
+    /** @see AssemblyBuilder#enterBlock(Iterable, AssemblyStepIterationController, boolean, BlockEvents) */
+    final void enterBlock(@Nonnull Iterable<SourceLocation> sourceLocations,
+            @CheckForNull AssemblyStepIterationController iterationController, @Nonnull AssemblyStep step,
+            boolean transparentParent, @CheckForNull BlockEvents events) {
+        this.enterBlock(new Block(new AssemblyStepLocationGenerator(sourceLocations, iterationController, step.getLocation(),
+                transparentParent), events), step);
     }
 
-    /** @see AssemblyBuilder#enterComposite(boolean) */
-    final void enterComposite(@Nonnull AssemblyStep step, boolean transparentParent) {
-        this.enterChildContext(step.getLocation().getSourceLocation().getChildSourceLocations(), null, step, transparentParent);
+    /** @see AssemblyBuilder#enterComposite(boolean, BlockEvents) */
+    final void enterComposite(@Nonnull AssemblyStep step, boolean transparentParent, @CheckForNull BlockEvents events) {
+        this.enterBlock(step.getLocation().getSourceLocation().getChildSourceLocations(), null, step, transparentParent, events);
+    }
+
+    /** @see AssemblyBuilder#enterFile(AbstractSourceFile, Architecture) */
+    final void enterFile(@Nonnull AbstractSourceFile<?> file, @CheckForNull Architecture architecture, @Nonnull AssemblyStep step) {
+        final Architecture fileArchitecture = architecture == null ? step.getLocation().getSourceLocation().getArchitecture()
+                : architecture;
+        this.enterBlock(file.getSourceLocations(fileArchitecture), null, step, false, null);
     }
 
     /** @see AssemblyBuilder#enterNamespace(String) */
@@ -830,6 +834,15 @@ public final class Assembly {
         }
 
         step.setHasSideEffects();
+    }
+
+    /** @see AssemblyBuilder#getCurrentBlock() */
+    final Block getCurrentBlock() {
+        if (this.blockStack.isEmpty()) {
+            throw new IllegalStateException("No current block");
+        }
+
+        return this.blockStack.get(this.blockStack.size() - 1);
     }
 
     /** @see AssemblyBuilder#getCustomAssemblyData(Object) */
@@ -1034,8 +1047,8 @@ public final class Assembly {
         this.symbolReferences.clear();
         SourceFile mainSourceFile = this.configuration.getMainSourceFile();
         Architecture initialArchitecture = this.configuration.getInitialArchitecture();
-        this.stepLocationGeneratorStack.add(new AssemblyStepLocationGenerator(mainSourceFile
-                .getSourceLocations(initialArchitecture), null, null, false));
+        this.blockStack.add(new Block(new AssemblyStepLocationGenerator(mainSourceFile.getSourceLocations(initialArchitecture),
+                null, null, false), null));
         this.currentNamespace = null;
         this.endPass = false;
         ++this.currentPass;
@@ -1044,5 +1057,4 @@ public final class Assembly {
             customAssemblyData.startedNewPass();
         }
     }
-
 }

@@ -617,18 +617,114 @@ public class AssemblyTest {
     }
 
     /**
-     * Asserts that {@link Assembly#enterChildContext(Iterable, AssemblyStepIterationController, AssemblyStep, boolean)}, when
-     * called with a non-null {@link AssemblyStepIterationController}, enters a child context over a sequence of
-     * {@link SourceLocation}s that can be assembled a variable number of times.
+     * Asserts that {@link Assembly#enterBlock(Iterable, AssemblyStepIterationController, AssemblyStep, boolean, BlockEvents)}, when
+     * called with a non-null {@link BlockEvents}, enters a block that references that {@link BlockEvents}.
+     */
+    @Test
+    public void enterBlockWithEvents() {
+        final BlockEvents blockEvents = new BlockEvents();
+
+        final TestSourceNode nodeThatChecksTheCurrentBlock = new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) {
+                final Block currentBlock = builder.getCurrentBlock();
+                assertThat(currentBlock, is(not(nullValue())));
+                assertThat(currentBlock.getEvents(), is(sameInstance(blockEvents)));
+            }
+        };
+
+        final TestCompositeSourceNode nodeThatEntersABlockWithEvents = new TestCompositeSourceNode(
+                Arrays.asList(nodeThatChecksTheCurrentBlock)) {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) {
+                assertThat(builder.getCurrentBlock(), is(not(nullValue())));
+
+                builder.enterBlock(builder.getStep().getLocation().getSourceLocation().getChildSourceLocations(), null, false,
+                        blockEvents);
+            }
+        };
+
+        final Assembly assembly = createAssembly(nodeThatEntersABlockWithEvents);
+
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.COMPLETE);
+        assertThat(assembly.getGravity(), is(MessageGravity.NONE));
+
+        nodeThatEntersABlockWithEvents.assertAssembleCount(1);
+        nodeThatChecksTheCurrentBlock.assertAssembleCount(1);
+    }
+
+    /**
+     * Asserts that {@link Assembly#enterBlock(Iterable, AssemblyStepIterationController, AssemblyStep, boolean, BlockEvents)}, when
+     * called with a non-null {@link BlockEvents} that overrides {@link BlockEvents#exitBlock()}, enters a block that will call that
+     * overridden method when exiting the block.
+     */
+    @Test
+    public void enterBlockWithExitBlockEvent() {
+        final AtomicBoolean ranExitBlock = new AtomicBoolean();
+
+        final BlockEvents blockEvents = new BlockEvents() {
+            @Override
+            public void exitBlock() throws IOException {
+                ranExitBlock.set(true);
+            }
+        };
+
+        final TestSourceNode nodeThatChecksTheCurrentBlock = new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) {
+                final Block currentBlock = builder.getCurrentBlock();
+                assertThat(currentBlock, is(not(nullValue())));
+                assertThat(currentBlock.getEvents(), is(sameInstance(blockEvents)));
+            }
+        };
+
+        final TestCompositeSourceNode nodeThatEntersABlockWithEvents = new TestCompositeSourceNode(
+                Collections.singleton(nodeThatChecksTheCurrentBlock)) {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) {
+                assertThat(builder.getCurrentBlock(), is(not(nullValue())));
+
+                builder.enterBlock(builder.getStep().getLocation().getSourceLocation().getChildSourceLocations(), null, false,
+                        blockEvents);
+            }
+        };
+
+        final TestSourceNode nodeThatChecksThatTheBlockHasExited = new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
+                assertThat(ranExitBlock.get(), is(true));
+            }
+        };
+
+        final SourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatEntersABlockWithEvents,
+                nodeThatChecksThatTheBlockHasExited));
+        final Assembly assembly = createAssembly(rootNode);
+
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.COMPLETE);
+        assertThat(assembly.getGravity(), is(MessageGravity.NONE));
+
+        nodeThatEntersABlockWithEvents.assertAssembleCount(1);
+        nodeThatChecksTheCurrentBlock.assertAssembleCount(1);
+        nodeThatChecksThatTheBlockHasExited.assertAssembleCount(1);
+    }
+
+    /**
+     * Asserts that {@link Assembly#enterBlock(Iterable, AssemblyStepIterationController, AssemblyStep, boolean, BlockEvents)}, when
+     * called with a non-null {@link AssemblyStepIterationController}, enters a block over a sequence of {@link SourceLocation}s
+     * that can be assembled a variable number of times.
      *
      * @throws IOException
      *             an I/O exception occurred
      */
     @Test
-    public void enterChildContextWithIterationController() throws IOException {
+    public void enterBlockWithIterationController() throws IOException {
         final TestSourceNode nodeThatEmitsData = createNodeThatEmitsAByte((byte) 1);
 
-        final TestCompositeSourceNode nodeThatEntersAChildContextWithAnIterationController = new TestCompositeSourceNode(
+        final TestCompositeSourceNode nodeThatEntersABlockWithAnIterationController = new TestCompositeSourceNode(
                 Arrays.asList(nodeThatEmitsData)) {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
@@ -641,13 +737,12 @@ public class AssemblyTest {
                     }
                 };
 
-                builder.enterChildContext(builder.getStep().getLocation().getSourceLocation().getChildSourceLocations(),
-                        iterationController, false);
+                builder.enterBlock(builder.getStep().getLocation().getSourceLocation().getChildSourceLocations(),
+                        iterationController, false, null);
             }
         };
 
-        final SourceNode rootNode = new SimpleCompositeSourceNode(
-                Arrays.asList(nodeThatEntersAChildContextWithAnIterationController));
+        final SourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatEntersABlockWithAnIterationController));
         final Assembly assembly = createAssembly(rootNode);
 
         step(assembly, AssemblyCompletionStatus.PENDING);
@@ -657,7 +752,7 @@ public class AssemblyTest {
         step(assembly, AssemblyCompletionStatus.COMPLETE);
         assertThat(assembly.getGravity(), is(MessageGravity.NONE));
 
-        nodeThatEntersAChildContextWithAnIterationController.assertAssembleCount(1);
+        nodeThatEntersABlockWithAnIterationController.assertAssembleCount(1);
         nodeThatEmitsData.assertAssembleCount(3);
 
         checkOutput(assembly, new byte[] { 1, 1, 1 });
@@ -672,14 +767,14 @@ public class AssemblyTest {
     }
 
     /**
-     * Asserts that {@link Assembly#enterChildContext(Iterable, AssemblyStepIterationController, AssemblyStep, boolean)}, when
+     * Asserts that {@link Assembly#enterBlock(Iterable, AssemblyStepIterationController, AssemblyStep, boolean, BlockEvents)}, when
      * called with a non-null {@link AssemblyStepIterationController} whose
      * {@link AssemblyStepIterationController#hasNextIteration()} methods returns <code>false</code> on the first call, enters a
-     * child context over a sequence of {@link SourceLocation}s that is never assembled.
+     * block over a sequence of {@link SourceLocation}s that is never assembled.
      */
     @Test
-    public void enterChildContextWithZeroIterations() {
-        final TestCompositeSourceNode nodeThatEntersAChildContextWithAnIterationController = new TestCompositeSourceNode(
+    public void enterBlockWithZeroIterations() {
+        final TestCompositeSourceNode nodeThatEntersABlockWithAnIterationController = new TestCompositeSourceNode(
                 Arrays.asList(NODE_THAT_SHOULD_NOT_BE_REACHED)) {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
@@ -690,31 +785,120 @@ public class AssemblyTest {
                     }
                 };
 
-                builder.enterChildContext(builder.getStep().getLocation().getSourceLocation().getChildSourceLocations(),
-                        iterationController, false);
+                builder.enterBlock(builder.getStep().getLocation().getSourceLocation().getChildSourceLocations(),
+                        iterationController, false, null);
             }
         };
 
-        final SourceNode rootNode = new SimpleCompositeSourceNode(
-                Arrays.asList(nodeThatEntersAChildContextWithAnIterationController));
+        final SourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatEntersABlockWithAnIterationController));
         final Assembly assembly = createAssembly(rootNode);
 
         step(assembly, AssemblyCompletionStatus.PENDING);
         step(assembly, AssemblyCompletionStatus.COMPLETE);
         assertThat(assembly.getGravity(), is(MessageGravity.NONE));
 
-        nodeThatEntersAChildContextWithAnIterationController.assertAssembleCount(1);
+        nodeThatEntersABlockWithAnIterationController.assertAssembleCount(1);
     }
 
     /**
-     * Asserts that {@link Assembly#enterChildFile(AbstractSourceFile, Architecture, AssemblyStep)} enters a child context for an
+     * Asserts that {@link Assembly#enterComposite(AssemblyStep, boolean, BlockEvents)} enters a block for the child source
+     * locations of a {@link CompositeSourceNode}.
+     *
+     * @throws IOException
+     *             an I/O exception occurred
+     */
+    @Test
+    public void enterComposite() throws IOException {
+        final TestSourceNode node1 = createNodeThatEmitsAByte((byte) 1);
+        final TestSourceNode node2 = createNodeThatEmitsAByte((byte) 2);
+        final TestSourceNode node3 = createNodeThatEmitsAByte((byte) 3);
+
+        final SourceNode nonTransparentCompositeNode = new CompositeSourceNode(Arrays.asList(node2, node3), null) {
+            @Override
+            protected void assembleCore(AssemblyBuilder builder) throws IOException {
+                builder.enterComposite(false, null);
+            }
+        };
+
+        final SourceNode transparentCompositeNode = new SimpleCompositeSourceNode(Arrays.asList(node1, nonTransparentCompositeNode));
+
+        final Assembly assembly = createAssembly(transparentCompositeNode);
+
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.COMPLETE);
+        assertThat(assembly.getGravity(), is(MessageGravity.NONE));
+
+        node1.assertAssembleCount(1);
+        node2.assertAssembleCount(1);
+        node3.assertAssembleCount(1);
+
+        checkOutput(assembly, new byte[] { 1, 2, 3 });
+
+        final List<AssemblyStep> steps = assembly.getSteps();
+        AssemblyStep step;
+        AssemblyStepLocation stepLocation;
+        SourceLocation sourceLocation;
+
+        step = steps.get(0);
+        final AssemblyStepLocation parentStepLocation = step.getLocation();
+        stepLocation = parentStepLocation;
+        sourceLocation = stepLocation.getSourceLocation();
+        assertThat(sourceLocation.getSourceNode(), is(transparentCompositeNode));
+        assertThat(stepLocation.getIterationNumber(), is(0L));
+        assertThat(stepLocation.getParent(), is(nullValue()));
+        assertThat(stepLocation.isParentTransparent(), is(false));
+        checkOutput(step, EMPTY_BYTE_ARRAY);
+
+        step = steps.get(1);
+        stepLocation = step.getLocation();
+        sourceLocation = stepLocation.getSourceLocation();
+        assertThat(sourceLocation.getSourceNode(), is((SourceNode) node1));
+        assertThat(stepLocation.getIterationNumber(), is(0L));
+        assertThat(stepLocation.getParent(), is(parentStepLocation));
+        assertThat(stepLocation.isParentTransparent(), is(true));
+        checkOutput(step, new byte[] { 1 });
+
+        step = steps.get(2);
+        final AssemblyStepLocation parentStepLocation2 = step.getLocation();
+        stepLocation = parentStepLocation2;
+        sourceLocation = stepLocation.getSourceLocation();
+        assertThat(sourceLocation.getSourceNode(), is(nonTransparentCompositeNode));
+        assertThat(stepLocation.getIterationNumber(), is(0L));
+        assertThat(stepLocation.getParent(), is(parentStepLocation));
+        assertThat(stepLocation.isParentTransparent(), is(true));
+        checkOutput(step, EMPTY_BYTE_ARRAY);
+
+        step = steps.get(3);
+        stepLocation = step.getLocation();
+        sourceLocation = stepLocation.getSourceLocation();
+        assertThat(sourceLocation.getSourceNode(), is((SourceNode) node2));
+        assertThat(stepLocation.getIterationNumber(), is(0L));
+        assertThat(stepLocation.getParent(), is(parentStepLocation2));
+        assertThat(stepLocation.isParentTransparent(), is(false));
+        checkOutput(step, new byte[] { 2 });
+
+        step = steps.get(4);
+        stepLocation = step.getLocation();
+        sourceLocation = stepLocation.getSourceLocation();
+        assertThat(sourceLocation.getSourceNode(), is((SourceNode) node3));
+        assertThat(stepLocation.getIterationNumber(), is(0L));
+        assertThat(stepLocation.getParent(), is(parentStepLocation2));
+        assertThat(stepLocation.isParentTransparent(), is(false));
+        checkOutput(step, new byte[] { 3 });
+    }
+
+    /**
+     * Asserts that {@link Assembly#enterFile(AbstractSourceFile, Architecture, AssemblyStep)} enters a block for an
      * {@link AbstractSourceFile}.
      *
      * @throws IOException
      *             an I/O exception occurred
      */
     @Test
-    public void enterChildFile() throws IOException {
+    public void enterFile() throws IOException {
         final SourceFile mainFile = new SourceFile("", "main.asm");
         final SourceFile childFile = new SourceFile("", "child.asm");
 
@@ -722,14 +906,14 @@ public class AssemblyTest {
 
         final Architecture childFileArchitecture = new TestArchitecture(nodeThatOutputsData);
 
-        final TestSourceNode nodeThatEntersAChildFile = new TestSourceNode() {
+        final TestSourceNode nodeThatEntersAFile = new TestSourceNode() {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                builder.enterChildFile(childFile, childFileArchitecture);
+                builder.enterFile(childFile, childFileArchitecture);
             }
         };
 
-        final Architecture mainFileArchitecture = new TestArchitecture(nodeThatEntersAChildFile);
+        final Architecture mainFileArchitecture = new TestArchitecture(nodeThatEntersAFile);
 
         final Assembly assembly = new Assembly(new Configuration(Environment.DEFAULT, mainFile, mainFileArchitecture));
 
@@ -737,7 +921,7 @@ public class AssemblyTest {
         step(assembly, AssemblyCompletionStatus.COMPLETE);
         assertThat(assembly.getGravity(), is(MessageGravity.NONE));
 
-        nodeThatEntersAChildFile.assertAssembleCount(1);
+        nodeThatEntersAFile.assertAssembleCount(1);
         nodeThatOutputsData.assertAssembleCount(1);
         checkOutput(assembly, new byte[] { 0x12 });
 
@@ -752,7 +936,7 @@ public class AssemblyTest {
         sourceLocation = stepLocation.getSourceLocation();
         assertThat(sourceLocation.getFile(), is((Object) mainFile));
         assertThat(sourceLocation.getArchitecture(), is(mainFileArchitecture));
-        assertThat(sourceLocation.getSourceNode(), is((SourceNode) nodeThatEntersAChildFile));
+        assertThat(sourceLocation.getSourceNode(), is((SourceNode) nodeThatEntersAFile));
         assertThat(stepLocation.getIterationNumber(), is(0L));
         assertThat(stepLocation.getParent(), is(nullValue()));
         checkOutput(step, EMPTY_BYTE_ARRAY);
@@ -769,14 +953,14 @@ public class AssemblyTest {
     }
 
     /**
-     * Asserts that {@link Assembly#enterChildFile(AbstractSourceFile, Architecture, AssemblyStep)} uses the current architecture
-     * when <code>null</code> is passed for the <code>architecture</code> parameter.
+     * Asserts that {@link Assembly#enterFile(AbstractSourceFile, Architecture, AssemblyStep)} uses the current architecture when
+     * <code>null</code> is passed for the <code>architecture</code> parameter.
      *
      * @throws IOException
      *             an I/O exception occurred
      */
     @Test
-    public void enterChildFileSameArchitecture() throws IOException {
+    public void enterFileSameArchitecture() throws IOException {
         final Architecture architecture = new Architecture(null) {
             @Override
             public SourceNode parse(Document text) {
@@ -794,7 +978,7 @@ public class AssemblyTest {
                                 assert fileFetcher != null;
                                 final SourceFile childFile = fileFetcher.fetchSourceFile(Character.toString(text.charAt(1)));
                                 assert childFile != null;
-                                builder.enterChildFile(childFile, null);
+                                builder.enterFile(childFile, null);
                             }
                         });
                     } else if (ch >= '0' && ch <= '9') {
@@ -932,96 +1116,6 @@ public class AssemblyTest {
         assertThat(sourceLocation.getLinePosition(), is(4));
         assertThat(stepLocation.getIterationNumber(), is(0L));
         assertThat(stepLocation.getParent(), is(rootStepLocation));
-        checkOutput(step, new byte[] { 3 });
-    }
-
-    /**
-     * Asserts that {@link Assembly#enterComposite(AssemblyStep, boolean)} enters a child context for the child source locations of
-     * a {@link CompositeSourceNode}.
-     *
-     * @throws IOException
-     *             an I/O exception occurred
-     */
-    @Test
-    public void enterComposite() throws IOException {
-        final TestSourceNode node1 = createNodeThatEmitsAByte((byte) 1);
-        final TestSourceNode node2 = createNodeThatEmitsAByte((byte) 2);
-        final TestSourceNode node3 = createNodeThatEmitsAByte((byte) 3);
-
-        final SourceNode nonTransparentCompositeNode = new CompositeSourceNode(Arrays.asList(node2, node3), null) {
-            @Override
-            protected void assembleCore(AssemblyBuilder builder) throws IOException {
-                builder.enterComposite(false);
-            }
-        };
-
-        final SourceNode transparentCompositeNode = new SimpleCompositeSourceNode(Arrays.asList(node1, nonTransparentCompositeNode));
-
-        final Assembly assembly = createAssembly(transparentCompositeNode);
-
-        step(assembly, AssemblyCompletionStatus.PENDING);
-        step(assembly, AssemblyCompletionStatus.PENDING);
-        step(assembly, AssemblyCompletionStatus.PENDING);
-        step(assembly, AssemblyCompletionStatus.PENDING);
-        step(assembly, AssemblyCompletionStatus.COMPLETE);
-        assertThat(assembly.getGravity(), is(MessageGravity.NONE));
-
-        node1.assertAssembleCount(1);
-        node2.assertAssembleCount(1);
-        node3.assertAssembleCount(1);
-
-        checkOutput(assembly, new byte[] { 1, 2, 3 });
-
-        final List<AssemblyStep> steps = assembly.getSteps();
-        AssemblyStep step;
-        AssemblyStepLocation stepLocation;
-        SourceLocation sourceLocation;
-
-        step = steps.get(0);
-        final AssemblyStepLocation parentStepLocation = step.getLocation();
-        stepLocation = parentStepLocation;
-        sourceLocation = stepLocation.getSourceLocation();
-        assertThat(sourceLocation.getSourceNode(), is(transparentCompositeNode));
-        assertThat(stepLocation.getIterationNumber(), is(0L));
-        assertThat(stepLocation.getParent(), is(nullValue()));
-        assertThat(stepLocation.isParentTransparent(), is(false));
-        checkOutput(step, EMPTY_BYTE_ARRAY);
-
-        step = steps.get(1);
-        stepLocation = step.getLocation();
-        sourceLocation = stepLocation.getSourceLocation();
-        assertThat(sourceLocation.getSourceNode(), is((SourceNode) node1));
-        assertThat(stepLocation.getIterationNumber(), is(0L));
-        assertThat(stepLocation.getParent(), is(parentStepLocation));
-        assertThat(stepLocation.isParentTransparent(), is(true));
-        checkOutput(step, new byte[] { 1 });
-
-        step = steps.get(2);
-        final AssemblyStepLocation parentStepLocation2 = step.getLocation();
-        stepLocation = parentStepLocation2;
-        sourceLocation = stepLocation.getSourceLocation();
-        assertThat(sourceLocation.getSourceNode(), is(nonTransparentCompositeNode));
-        assertThat(stepLocation.getIterationNumber(), is(0L));
-        assertThat(stepLocation.getParent(), is(parentStepLocation));
-        assertThat(stepLocation.isParentTransparent(), is(true));
-        checkOutput(step, EMPTY_BYTE_ARRAY);
-
-        step = steps.get(3);
-        stepLocation = step.getLocation();
-        sourceLocation = stepLocation.getSourceLocation();
-        assertThat(sourceLocation.getSourceNode(), is((SourceNode) node2));
-        assertThat(stepLocation.getIterationNumber(), is(0L));
-        assertThat(stepLocation.getParent(), is(parentStepLocation2));
-        assertThat(stepLocation.isParentTransparent(), is(false));
-        checkOutput(step, new byte[] { 2 });
-
-        step = steps.get(4);
-        stepLocation = step.getLocation();
-        sourceLocation = stepLocation.getSourceLocation();
-        assertThat(sourceLocation.getSourceNode(), is((SourceNode) node3));
-        assertThat(stepLocation.getIterationNumber(), is(0L));
-        assertThat(stepLocation.getParent(), is(parentStepLocation2));
-        assertThat(stepLocation.isParentTransparent(), is(false));
         checkOutput(step, new byte[] { 3 });
     }
 
@@ -1177,6 +1271,23 @@ public class AssemblyTest {
         step(assembly, AssemblyCompletionStatus.COMPLETE); // fatal error node
         assertThat(assembly.getGravity(), is(MessageGravity.FATAL_ERROR));
         nodeThatAddsAFatalError.assertAssembleCount(1);
+    }
+
+    /**
+     * Asserts that {@link Assembly#getCurrentBlock()} throws an {@link IllegalStateException} when called after the assembly
+     * process is complete.
+     */
+    @Test
+    public void getCurrentBlockAfterComplete() {
+        final Assembly assembly = createAssembly(new SimpleCompositeSourceNode(Collections.<SourceNode> emptySet()));
+        step(assembly, AssemblyCompletionStatus.COMPLETE);
+        assertThat(assembly.getGravity(), is(MessageGravity.NONE));
+
+        try {
+            assembly.getCurrentBlock();
+            fail("Assembly.getCurrentBlock() should have thrown an IllegalStateException");
+        } catch (IllegalStateException e) {
+        }
     }
 
     /**
