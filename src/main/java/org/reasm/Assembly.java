@@ -537,6 +537,12 @@ public final class Assembly {
                     // Assemble the source node.
                     sourceNode.assemble(builder);
 
+                    // Pop blocks whose end has been reached off the stack.
+                    while (!this.blockStack.isEmpty() && !this.blockStack.get(this.blockStack.size() - 1).hasNextLocation()) {
+                        this.blockStack.get(this.blockStack.size() - 1).exitBlock();
+                        this.blockStack.remove(this.blockStack.size() - 1);
+                    }
+
                     // Increase the program counter.
                     this.programCounter += step.getAssembledDataLength();
                 } finally {
@@ -547,12 +553,6 @@ public final class Assembly {
                 if (this.gravity == MessageGravity.FATAL_ERROR) {
                     this.completeAssembly(null);
                     return AssemblyCompletionStatus.COMPLETE;
-                }
-
-                // Pop location iterators whose end has been reached off the stack.
-                while (!this.blockStack.isEmpty() && !this.blockStack.get(this.blockStack.size() - 1).hasNextLocation()) {
-                    this.blockStack.get(this.blockStack.size() - 1).exitBlock();
-                    this.blockStack.remove(this.blockStack.size() - 1);
                 }
 
                 if (this.endPass || this.blockStack.isEmpty()) {
