@@ -180,8 +180,11 @@ public final class AssemblyBuilder {
     /**
      * Signals that the current pass should end after the current node. This is generally caused by a directive that marks the end
      * of the program. Calling this methods causes the rest of the source to be ignored and, if needed, starts a new pass.
+     *
+     * @throws IOException
+     *             an I/O exception occurred while unwinding the block stack
      */
-    public final void endPass() {
+    public final void endPass() throws IOException {
         this.checkState();
         this.assembly.endPass(this.step);
     }

@@ -132,6 +132,15 @@ public class AssemblyTest {
         };
     }
 
+    private static TestSourceNode createNodeThatEndsThePass() {
+        return new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
+                builder.endPass();
+            }
+        };
+    }
+
     private static TestSourceNode createNodeThatEntersANamespace(@Nonnull final String name) {
         return new TestSourceNode() {
             @Override
@@ -600,12 +609,7 @@ public class AssemblyTest {
      */
     @Test
     public void endPass() {
-        final TestSourceNode nodeThatEndsThePass = new TestSourceNode() {
-            @Override
-            protected void assembleCore2(AssemblyBuilder builder) {
-                builder.endPass();
-            }
-        };
+        final TestSourceNode nodeThatEndsThePass = createNodeThatEndsThePass();
 
         final SimpleCompositeSourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatEndsThePass,
                 NODE_THAT_SHOULD_NOT_BE_REACHED));
@@ -614,6 +618,55 @@ public class AssemblyTest {
         step(assembly, AssemblyCompletionStatus.COMPLETE); // end pass node
         assertThat(assembly.getGravity(), is(MessageGravity.NONE));
         nodeThatEndsThePass.assertAssembleCount(1);
+    }
+
+    /**
+     * Asserts that {@link Assembly#endPass(AssemblyStep)} calls {@link Block#exitBlock()} on the blocks still in the block stack.
+     *
+     * @throws IOException
+     *             an I/O exception occurred
+     */
+    @Test
+    public void endPassUnwindsBlockStack() throws IOException {
+        final TestSourceNode nodeThatEntersATransformationBlock = createNodeThatEntersATransformationBlock(IdentityTransformation.INSTANCE);
+
+        final TestSourceNode nodeThatEmitsData = createNodeThatEmitsAByte((byte) 1);
+
+        final TestSourceNode nodeThatEndsThePass = createNodeThatEndsThePass();
+
+        final TestSourceNode nodeThatExitsATransformationBlock = createNodeThatExitsATransformationBlock();
+
+        final TestCompositeSourceNode block = new TestCompositeSourceNode(Arrays.asList(nodeThatEntersATransformationBlock,
+                nodeThatEmitsData, nodeThatEndsThePass, NODE_THAT_SHOULD_NOT_BE_REACHED, nodeThatExitsATransformationBlock)) {
+            @Override
+            protected void assembleCore2(final AssemblyBuilder builder) throws IOException {
+                builder.enterComposite(true, new BlockEvents() {
+                    @Override
+                    public void exitBlock() throws IOException {
+                        builder.exitTransformationBlock();
+                    }
+                });
+            }
+        };
+
+        final SimpleCompositeSourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(block));
+        final Assembly assembly = createAssembly(rootNode);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.COMPLETE);
+        assertThat(assembly.getGravity(), is(MessageGravity.NONE));
+
+        block.assertAssembleCount(1);
+        nodeThatEntersATransformationBlock.assertAssembleCount(1);
+        nodeThatEndsThePass.assertAssembleCount(1);
+        nodeThatExitsATransformationBlock.assertAssembleCount(0);
+
+        // A transformation block intercepts the output.
+        // Output is only written to the assembly when exiting the transformation block.
+        // This checks that the transformation block has been exited.
+        checkOutput(assembly, new byte[] { 1 });
     }
 
     /**

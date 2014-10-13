@@ -156,7 +156,6 @@ public final class Assembly {
     private Namespace currentNamespace;
     @Nonnull
     private final ArrayList<TransformationBlock> transformationBlockStack = new ArrayList<>();
-    private boolean endPass;
 
     @Nonnull
     private final Map<Object, CustomAssemblyData> customAssemblyData = new HashMap<>();
@@ -539,8 +538,7 @@ public final class Assembly {
 
                     // Pop blocks whose end has been reached off the stack.
                     while (!this.blockStack.isEmpty() && !this.blockStack.get(this.blockStack.size() - 1).hasNextLocation()) {
-                        this.blockStack.get(this.blockStack.size() - 1).exitBlock();
-                        this.blockStack.remove(this.blockStack.size() - 1);
+                        this.popBlock();
                     }
 
                     // Increase the program counter.
@@ -555,7 +553,7 @@ public final class Assembly {
                     return AssemblyCompletionStatus.COMPLETE;
                 }
 
-                if (this.endPass || this.blockStack.isEmpty()) {
+                if (this.blockStack.isEmpty()) {
                     boolean assemblyRequiresNewPass = false;
                     int numberOfUnresolvedSymbolReferences = 0;
                     for (SymbolReference symbolReference : this.symbolReferences) {
@@ -743,13 +741,10 @@ public final class Assembly {
     }
 
     /** @see AssemblyBuilder#endPass() */
-    final void endPass(@Nonnull AssemblyStep step) {
-        this.endPass = true;
-        step.setHasSideEffects();
-    }
-
-    final void enterBlock(@Nonnull Block block, @Nonnull AssemblyStep step) {
-        this.blockStack.add(block);
+    final void endPass(@Nonnull AssemblyStep step) throws IOException {
+        while (!this.blockStack.isEmpty()) {
+            this.popBlock();
+        }
 
         step.setHasSideEffects();
     }
@@ -758,8 +753,10 @@ public final class Assembly {
     final void enterBlock(@Nonnull Iterable<SourceLocation> sourceLocations,
             @CheckForNull AssemblyStepIterationController iterationController, @Nonnull AssemblyStep step,
             boolean transparentParent, @CheckForNull BlockEvents events) {
-        this.enterBlock(new Block(new AssemblyStepLocationGenerator(sourceLocations, iterationController, step.getLocation(),
-                transparentParent), events), step);
+        this.blockStack.add(new Block(new AssemblyStepLocationGenerator(sourceLocations, iterationController, step.getLocation(),
+                transparentParent), events));
+
+        step.setHasSideEffects();
     }
 
     /** @see AssemblyBuilder#enterComposite(boolean, BlockEvents) */
@@ -1035,6 +1032,11 @@ public final class Assembly {
         }
     }
 
+    private final void popBlock() throws IOException {
+        this.blockStack.get(this.blockStack.size() - 1).exitBlock();
+        this.blockStack.remove(this.blockStack.size() - 1);
+    }
+
     /**
      * Starts a new pass.
      */
@@ -1050,7 +1052,6 @@ public final class Assembly {
         this.blockStack.add(new Block(new AssemblyStepLocationGenerator(mainSourceFile.getSourceLocations(initialArchitecture),
                 null, null, false), null));
         this.currentNamespace = null;
-        this.endPass = false;
         ++this.currentPass;
 
         for (CustomAssemblyData customAssemblyData : this.customAssemblyData.values()) {
