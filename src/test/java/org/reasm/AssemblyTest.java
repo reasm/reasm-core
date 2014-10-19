@@ -1327,6 +1327,146 @@ public class AssemblyTest {
     }
 
     /**
+     * Asserts that {@link Assembly#fetchBinaryFile(String)} returns and caches the contents of the specified binary file, or throws
+     * a {@link FileNotFoundException} if the specified file was not found.
+     *
+     * @throws IOException
+     *             an I/O exception occurred
+     */
+    @Test
+    public void fetchBinaryFile() throws IOException {
+        final byte[] nil = null;
+
+        Configuration configuration = new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT);
+        configuration = configuration.setFileFetcher(new FileFetcher() {
+            @Override
+            public byte[] fetchBinaryFile(String filePath) throws IOException {
+                if ("a".equals(filePath)) {
+                    return new byte[] { 0x01 };
+                }
+
+                if ("b".equals(filePath)) {
+                    return new byte[] { 0x02 };
+                }
+
+                return nil;
+            }
+
+            @Override
+            public SourceFile fetchSourceFile(String filePath) throws IOException {
+                throw new AssertionError();
+            }
+        });
+
+        final Assembly assembly = new Assembly(configuration);
+        byte[] file;
+
+        file = assembly.fetchBinaryFile("a");
+        assertThat(file, is(new byte[] { 0x01 }));
+        assertThat(assembly.fetchBinaryFile("a"), is(sameInstance(file)));
+
+        file = assembly.fetchBinaryFile("b");
+        assertThat(file, is(new byte[] { 0x02 }));
+        assertThat(assembly.fetchBinaryFile("b"), is(sameInstance(file)));
+
+        try {
+            assembly.fetchBinaryFile("c");
+            fail("Assembly.fetchBinaryFile should have thrown a FileNotFoundException");
+        } catch (FileNotFoundException e) {
+        }
+    }
+
+    /**
+     * Asserts that {@link Assembly#fetchBinaryFile(String)} throws a {@link FileNotFoundException} if the assembly's configuration
+     * has no file fetcher.
+     *
+     * @throws IOException
+     *             an I/O exception occurred
+     */
+    @Test
+    public void fetchBinaryFileNoFileFetcher() throws IOException {
+        final Configuration configuration = new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT);
+        final Assembly assembly = new Assembly(configuration);
+        try {
+            assembly.fetchBinaryFile("a");
+            fail("Assembly.fetchBinaryFile should have thrown a FileNotFoundException");
+        } catch (FileNotFoundException e) {
+        }
+    }
+
+    /**
+     * Asserts that {@link Assembly#fetchSourceFile(String)} returns and caches the contents of the specified source file, or throws
+     * a {@link FileNotFoundException} if the specified file was not found.
+     *
+     * @throws IOException
+     *             an I/O exception occurred
+     */
+    @Test
+    public void fetchSourceFile() throws IOException {
+        final SourceFile nil = null;
+
+        Configuration configuration = new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT);
+        configuration = configuration.setFileFetcher(new FileFetcher() {
+            @Override
+            public byte[] fetchBinaryFile(String filePath) throws IOException {
+                throw new AssertionError();
+            }
+
+            @Override
+            public SourceFile fetchSourceFile(String filePath) throws IOException {
+                if ("a".equals(filePath)) {
+                    return new SourceFile("AAA", "a");
+                }
+
+                if ("b".equals(filePath)) {
+                    return new SourceFile("BBB", "b");
+                }
+
+                return nil;
+            }
+        });
+
+        final Assembly assembly = new Assembly(configuration);
+        SourceFile file;
+
+        file = assembly.fetchSourceFile("a");
+        assertThat(file, is(notNullValue()));
+        assertThat(file.getText().toString(), is("AAA"));
+        assertThat(file.getFileName(), is("a"));
+        assertThat(assembly.fetchSourceFile("a"), is(sameInstance(file)));
+
+        file = assembly.fetchSourceFile("b");
+        assertThat(file, is(notNullValue()));
+        assertThat(file.getText().toString(), is("BBB"));
+        assertThat(file.getFileName(), is("b"));
+        assertThat(assembly.fetchSourceFile("b"), is(sameInstance(file)));
+
+        try {
+            assembly.fetchSourceFile("c");
+            fail("Assembly.fetchSourceFile should have thrown a FileNotFoundException");
+        } catch (FileNotFoundException e) {
+        }
+    }
+
+    /**
+     * Asserts that {@link Assembly#fetchSourceFile(String)} throws a {@link FileNotFoundException} if the assembly's configuration
+     * has no file fetcher.
+     *
+     * @throws IOException
+     *             an I/O exception occurred
+     */
+    @Test
+    public void fetchSourceFileNoFileFetcher() throws IOException {
+        final Configuration configuration = new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT);
+        final Assembly assembly = new Assembly(configuration);
+        try {
+            assembly.fetchSourceFile("a");
+            fail("Assembly.fetchSourceFile should have thrown a FileNotFoundException");
+        } catch (FileNotFoundException e) {
+        }
+    }
+
+    /**
      * Asserts that {@link Assembly#getCurrentBlock()} throws an {@link IllegalStateException} when called after the assembly
      * process is complete.
      */
