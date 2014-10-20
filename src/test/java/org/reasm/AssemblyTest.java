@@ -3,15 +3,7 @@ package org.reasm;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.reasm.AssemblyTestsCommon.EMPTY_SOURCE_FILE;
-import static org.reasm.AssemblyTestsCommon.FORTY_TWO;
-import static org.reasm.AssemblyTestsCommon.NODE_THAT_SHOULD_NOT_BE_REACHED;
-import static org.reasm.AssemblyTestsCommon.checkOutput;
-import static org.reasm.AssemblyTestsCommon.createAssembly;
-import static org.reasm.AssemblyTestsCommon.createNodeThatEmitsData;
-import static org.reasm.AssemblyTestsCommon.createNodeThatEntersATransformationBlock;
-import static org.reasm.AssemblyTestsCommon.createNodeThatExitsATransformationBlock;
-import static org.reasm.AssemblyTestsCommon.step;
+import static org.reasm.AssemblyTestsCommon.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -27,7 +19,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.hamcrest.Matcher;
@@ -97,32 +88,6 @@ public class AssemblyTest {
         };
     }
 
-    private static TestSourceNode createNodeThatDefinesASymbol(@Nonnull String name, boolean isLocalSymbol,
-            @Nonnull SymbolType type, @CheckForNull Value value) {
-        return createNodeThatDefinesASymbol(SymbolContext.VALUE, name, isLocalSymbol, type, value);
-    }
-
-    private static TestSourceNode createNodeThatDefinesASymbol(@Nonnull String name, @Nonnull SymbolType type,
-            @CheckForNull Value value) {
-        return createNodeThatDefinesASymbol(SymbolContext.VALUE, name, false, type, value);
-    }
-
-    private static <TValue> TestSourceNode createNodeThatDefinesASymbol(@Nonnull final SymbolContext<TValue> context,
-            @Nonnull final String name, final boolean isLocalSymbol, @Nonnull final SymbolType type,
-            @CheckForNull final TValue value) {
-        return new TestSourceNode() {
-            @Override
-            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                builder.defineSymbol(context, name, isLocalSymbol, type, value);
-            }
-        };
-    }
-
-    private static <TValue> TestSourceNode createNodeThatDefinesASymbol(@Nonnull SymbolContext<TValue> context,
-            @Nonnull String name, @Nonnull SymbolType type, @CheckForNull TValue value) {
-        return createNodeThatDefinesASymbol(context, name, false, type, value);
-    }
-
     private static TestSourceNode createNodeThatEmitsAByte(final byte b) {
         return new TestSourceNode() {
             @Override
@@ -137,24 +102,6 @@ public class AssemblyTest {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
                 builder.endPass();
-            }
-        };
-    }
-
-    private static TestSourceNode createNodeThatEntersANamespace(@Nonnull final String name) {
-        return new TestSourceNode() {
-            @Override
-            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                builder.enterNamespace(name);
-            }
-        };
-    }
-
-    private static TestSourceNode createNodeThatExitsANamespace() {
-        return new TestSourceNode() {
-            @Override
-            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                builder.exitNamespace();
             }
         };
     }
@@ -2897,11 +2844,7 @@ public class AssemblyTest {
      */
     @Test
     public void symbolWithUndeterminedValueAndNoDefinition() {
-        final TestSourceNode dummyNode = new TestSourceNode() {
-            @Override
-            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-            }
-        };
+        final TestSourceNode dummyNode = createNodeThatDoesNothing();
 
         final PredefinedSymbol predefinedSymbol = new PredefinedSymbol(SymbolContext.VALUE, "foo", SymbolType.CONSTANT, null);
         final Assembly assembly = new Assembly(new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, new TestArchitecture(
@@ -2985,8 +2928,7 @@ public class AssemblyTest {
 
         final TestSourceNode nodeThatReferencesTheFooSymbol = createNodeThatReferencesASymbol("foo");
 
-        final TestSourceNode nodeThatDefinesTheFooSymbol = AssemblyTest.createNodeThatDefinesASymbol("foo", SymbolType.CONSTANT,
-                FORTY_TWO);
+        final TestSourceNode nodeThatDefinesTheFooSymbol = createNodeThatDefinesASymbol("foo", SymbolType.CONSTANT, FORTY_TWO);
 
         final SourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatAddsATentativeErrorMessage,
                 nodeThatReferencesTheFooSymbol, nodeThatDefinesTheFooSymbol));

@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.hamcrest.Description;
@@ -49,6 +50,28 @@ final class AssemblyTestsCommon {
         return new Assembly(new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, new TestArchitecture(testNode)));
     }
 
+    static TestSourceNode createNodeThatDefinesASymbol(@Nonnull String name, boolean isLocalSymbol, @Nonnull SymbolType type,
+            @CheckForNull Value value) {
+        return createNodeThatDefinesASymbol(SymbolContext.VALUE, name, isLocalSymbol, type, value);
+    }
+
+    static TestSourceNode createNodeThatDefinesASymbol(@Nonnull String name, @Nonnull SymbolType type, @CheckForNull Value value) {
+        return createNodeThatDefinesASymbol(SymbolContext.VALUE, name, false, type, value);
+    }
+
+    static <TValue> TestSourceNode createNodeThatDefinesASymbol(@Nonnull SymbolContext<TValue> context, @Nonnull String name,
+            @Nonnull SymbolType type, @CheckForNull TValue value) {
+        return createNodeThatDefinesASymbol(context, name, false, type, value);
+    }
+
+    static TestSourceNode createNodeThatDoesNothing() {
+        return new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
+            }
+        };
+    }
+
     static TestSourceNode createNodeThatEmitsData(final byte[] data) {
         return new TestSourceNode() {
             @Override
@@ -58,11 +81,29 @@ final class AssemblyTestsCommon {
         };
     }
 
+    static TestSourceNode createNodeThatEntersANamespace(@Nonnull final String name) {
+        return new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
+                builder.enterNamespace(name);
+            }
+        };
+    }
+
     static TestSourceNode createNodeThatEntersATransformationBlock(@Nonnull final OutputTransformation transformation) {
         return new TestSourceNode() {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
                 builder.enterTransformationBlock(transformation);
+            }
+        };
+    }
+
+    static TestSourceNode createNodeThatExitsANamespace() {
+        return new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
+                builder.exitNamespace();
             }
         };
     }
@@ -98,6 +139,17 @@ final class AssemblyTestsCommon {
 
             throw new AssertionError(description.toString(), cause);
         }
+    }
+
+    private static <TValue> TestSourceNode createNodeThatDefinesASymbol(@Nonnull final SymbolContext<TValue> context,
+            @Nonnull final String name, final boolean isLocalSymbol, @Nonnull final SymbolType type,
+            @CheckForNull final TValue value) {
+        return new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
+                builder.defineSymbol(context, name, isLocalSymbol, type, value);
+            }
+        };
     }
 
     // This class is not meant to be instantiated.

@@ -1,6 +1,7 @@
 package org.reasm;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -53,6 +54,56 @@ public final class SymbolLookupContext {
         this.scopeKey = scopeKey;
         this.forwCounter = forwCounter;
         this.backCounter = backCounter;
+    }
+
+    @Override
+    public final boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (this.getClass() != obj.getClass()) {
+            return false;
+        }
+
+        final SymbolLookupContext other = (SymbolLookupContext) obj;
+        if (!this.assembly.equals(other.assembly)) {
+            return false;
+        }
+
+        if (!Objects.equals(this.namespace, other.namespace)) {
+            return false;
+        }
+
+        if (!Objects.equals(this.scopeKey, other.scopeKey)) {
+            return false;
+        }
+
+        if (this.forwCounter != other.forwCounter) {
+            return false;
+        }
+
+        if (this.backCounter != other.backCounter) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public final int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + this.assembly.hashCode();
+        result = prime * result + Objects.hashCode(this.namespace);
+        result = prime * result + Objects.hashCode(this.scopeKey);
+        result = prime * result + this.forwCounter;
+        result = prime * result + this.backCounter;
+        return result;
     }
 
     /**
