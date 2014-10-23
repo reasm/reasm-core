@@ -59,7 +59,8 @@ public abstract class Architecture implements Environment.ObjectWithNames {
      *         default implementation always returns <code>null</code>.
      */
     @CheckForNull
-    public Value evaluateExpression(@Nonnull CharSequence expression, @Nonnull Assembly assembly, @CheckForNull Consumer<SymbolReference> symbolReferenceConsumer,
+    public Value evaluateExpression(@Nonnull CharSequence expression, @Nonnull Assembly assembly,
+            @CheckForNull Consumer<SymbolReference> symbolReferenceConsumer,
             @CheckForNull Consumer<AssemblyMessage> assemblyMessageConsumer) {
         return null;
     }
