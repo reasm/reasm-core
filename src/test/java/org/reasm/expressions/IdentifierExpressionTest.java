@@ -7,6 +7,8 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 import org.reasm.StaticSymbol;
+import org.reasm.Symbol;
+import org.reasm.SymbolType;
 import org.reasm.UnsignedIntValue;
 import org.reasm.Value;
 import org.reasm.ValueVisitor;
@@ -31,6 +33,43 @@ public class IdentifierExpressionTest {
         final Value value = new UnsignedIntValue(1);
         final SymbolLookup symbolLookup = new SingleSymbolLookup("foo", new StaticSymbol(value));
         assertThat(new IdentifierExpression("foo", symbolLookup).evaluate(EvaluationContext.DUMMY), is(value));
+    }
+
+    /**
+     * Asserts that {@link IdentifierExpression#evaluate(EvaluationContext)} returns <code>null</code> when the identifier
+     * identifies a symbol whose value is not a {@link Value}.
+     */
+    @Test
+    public void evaluateNotAValue() {
+        final SymbolLookup symbolLookup = new SymbolLookup() {
+            @Override
+            public Symbol getSymbol(final String name) {
+                return new Symbol(name, SymbolType.CONSTANT) {
+                    @Override
+                    public Object getValue() {
+                        return name;
+                    }
+                };
+            }
+        };
+
+        assertThat(new IdentifierExpression("foo", symbolLookup).evaluate(EvaluationContext.DUMMY), is(nullValue()));
+    }
+
+    /**
+     * Asserts that {@link IdentifierExpression#evaluate(EvaluationContext)} returns <code>null</code> when the identifier
+     * identifies no known symbol.
+     */
+    @Test
+    public void evaluateNullSymbol() {
+        final SymbolLookup symbolLookup = new SymbolLookup() {
+            @Override
+            public Symbol getSymbol(String name) {
+                return null;
+            }
+        };
+
+        assertThat(new IdentifierExpression("foo", symbolLookup).evaluate(EvaluationContext.DUMMY), is(nullValue()));
     }
 
     /**
