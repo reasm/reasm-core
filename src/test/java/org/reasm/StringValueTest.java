@@ -23,7 +23,7 @@ public class StringValueTest extends ObjectHashCodeEqualsContract {
      *
      * @author Francis Gagné
      */
-    private static final class StringValueVisitor extends ValueVisitorAdapter {
+    private static final class StringValueVisitor extends ValueVisitorAdapter<Void> {
 
         boolean visited;
 

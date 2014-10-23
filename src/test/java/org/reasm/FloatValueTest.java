@@ -21,7 +21,7 @@ public class FloatValueTest extends ObjectHashCodeEqualsContract {
      *
      * @author Francis Gagné
      */
-    private static final class FloatValueVisitor extends ValueVisitorAdapter {
+    private static final class FloatValueVisitor extends ValueVisitorAdapter<Void> {
 
         boolean visited;
 

@@ -45,7 +45,7 @@ public class FunctionValueTest extends ObjectHashCodeEqualsContract {
      *
      * @author Francis Gagné
      */
-    private static final class FunctionValueVisitor extends ValueVisitorAdapter {
+    private static final class FunctionValueVisitor extends ValueVisitorAdapter<Void> {
 
         boolean visited;
 

@@ -21,7 +21,7 @@ public class UnsignedIntValueTest extends ObjectHashCodeEqualsContract {
      *
      * @author Francis Gagné
      */
-    private static final class UnsignedIntValueVisitor extends ValueVisitorAdapter {
+    private static final class UnsignedIntValueVisitor extends ValueVisitorAdapter<Void> {
 
         boolean visited;
 

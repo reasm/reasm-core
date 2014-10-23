@@ -1,51 +1,46 @@
 package org.reasm.testhelpers;
 
-import static org.junit.Assert.fail;
-
 import org.reasm.Function;
 import org.reasm.ValueVisitor;
 
 /**
  * A visitor that fails when any of its methods is called.
  *
+ * @param <T>
+ *            the visitor's result type
+ *
  * @author Francis Gagné
  */
-public class ValueVisitorAdapter implements ValueVisitor<Void> {
+public class ValueVisitorAdapter<T> implements ValueVisitor<T> {
 
     @Override
-    public Void visitFloat(double value) {
-        fail("accept() shouldn't call visitFloat()");
-        return null; // unreachable
+    public T visitFloat(double value) {
+        throw new AssertionError("accept() shouldn't call visitFloat()");
     }
 
     @Override
-    public Void visitFunction(Function value) {
-        fail("accept() shouldn't call visitFunction()");
-        return null; // unreachable
+    public T visitFunction(Function value) {
+        throw new AssertionError("accept() shouldn't call visitFunction()");
     }
 
     @Override
-    public Void visitSignedInt(long value) {
-        fail("accept() shouldn't call visitSignedInt()");
-        return null; // unreachable
+    public T visitSignedInt(long value) {
+        throw new AssertionError("accept() shouldn't call visitSignedInt()");
     }
 
     @Override
-    public Void visitString(String value) {
-        fail("accept() shouldn't call visitString()");
-        return null; // unreachable
+    public T visitString(String value) {
+        throw new AssertionError("accept() shouldn't call visitString()");
     }
 
     @Override
-    public Void visitUndetermined() {
-        fail("accept() shouldn't call visitUndetermined()");
-        return null; // unreachable
+    public T visitUndetermined() {
+        throw new AssertionError("accept() shouldn't call visitUndetermined()");
     }
 
     @Override
-    public Void visitUnsignedInt(long value) {
-        fail("accept() shouldn't call visitUnsignedInt()");
-        return null; // unreachable
+    public T visitUnsignedInt(long value) {
+        throw new AssertionError("accept() shouldn't call visitUnsignedInt()");
     }
 
 }

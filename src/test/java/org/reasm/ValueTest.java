@@ -17,7 +17,7 @@ public class ValueTest {
      *
      * @author Francis Gagné
      */
-    private static final class UndeterminedValueVisitor extends ValueVisitorAdapter {
+    private static final class UndeterminedValueVisitor extends ValueVisitorAdapter<Void> {
 
         boolean visited;
 
