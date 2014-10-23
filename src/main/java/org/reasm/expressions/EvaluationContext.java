@@ -16,7 +16,7 @@ import ca.fragag.Consumer;
 public final class EvaluationContext {
 
     /** A dummy evaluation context. */
-    public static final EvaluationContext DUMMY = new EvaluationContext(null, 0, null, null);
+    public static final EvaluationContext DUMMY = new EvaluationContext(null, 0, null);
 
     private static final Consumer<AssemblyMessage> DUMMY_ASSEMBLY_MESSAGE_CONSUMER = new Consumer<AssemblyMessage>() {
         @Override
@@ -27,8 +27,6 @@ public final class EvaluationContext {
     @CheckForNull
     private final Assembly assembly;
     private final long programCounter;
-    @CheckForNull
-    private final SymbolLookup symbolLookup;
     @Nonnull
     private final Consumer<AssemblyMessage> assemblyMessageConsumer;
 
@@ -39,16 +37,13 @@ public final class EvaluationContext {
      *            the assembly that contains the step in which the expression appears
      * @param programCounter
      *            the program counter at the step in which the expression appears
-     * @param symbolLookup
-     *            a {@link SymbolLookup} that will look up symbols by name
      * @param assemblyMessageConsumer
      *            a {@link Consumer} that will receive the assembly messages that were raised while evaluating the expression
      */
-    public EvaluationContext(@CheckForNull Assembly assembly, long programCounter, @CheckForNull SymbolLookup symbolLookup,
+    public EvaluationContext(@CheckForNull Assembly assembly, long programCounter,
             @CheckForNull Consumer<AssemblyMessage> assemblyMessageConsumer) {
         this.assembly = assembly;
         this.programCounter = programCounter;
-        this.symbolLookup = symbolLookup;
         this.assemblyMessageConsumer = assemblyMessageConsumer != null ? assemblyMessageConsumer : DUMMY_ASSEMBLY_MESSAGE_CONSUMER;
     }
 
@@ -79,16 +74,6 @@ public final class EvaluationContext {
      */
     public final long getProgramCounter() {
         return this.programCounter;
-    }
-
-    /**
-     * Gets the symbol lookup object in this evaluation context.
-     *
-     * @return the symbol lookup object
-     */
-    @CheckForNull
-    public final SymbolLookup getSymbolLookup() {
-        return this.symbolLookup;
     }
 
 }

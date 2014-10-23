@@ -54,9 +54,8 @@ public final class ValueExpression extends ValueOrientedExpression {
         return true;
     }
 
-    @CheckForNull
     @Override
-    public final Value evaluate(@Nonnull EvaluationContext evaluationContext) {
+    public final Value evaluate(EvaluationContext evaluationContext) {
         return this.value;
     }
 

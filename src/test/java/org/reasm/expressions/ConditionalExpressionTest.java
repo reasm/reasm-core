@@ -29,8 +29,6 @@ public class ConditionalExpressionTest {
     private static final ConditionalExpression UNDEFINED_CONDITIONAL_EXPRESSION = new ConditionalExpression(
             ValueExpression.UNDETERMINED, TRUE_PART, FALSE_PART);
 
-    private static final EvaluationContext EMPTY_EVALUATION_CONTEXT = new EvaluationContext(null, 0, null, null);
-
     /**
      * Asserts that {@link ConditionalExpression#ConditionalExpression(Expression, Expression, Expression)} correctly initializes a
      * {@link ConditionalExpression}.
@@ -75,7 +73,7 @@ public class ConditionalExpressionTest {
      */
     @Test
     public void evaluateFalseCondition() {
-        assertThat(FALSE_CONDITIONAL_EXPRESSION.evaluate(EMPTY_EVALUATION_CONTEXT), is((Value) new UnsignedIntValue(3)));
+        assertThat(FALSE_CONDITIONAL_EXPRESSION.evaluate(EvaluationContext.DUMMY), is((Value) new UnsignedIntValue(3)));
     }
 
     /**
@@ -84,7 +82,7 @@ public class ConditionalExpressionTest {
      */
     @Test
     public void evaluateTrueCondition() {
-        assertThat(TRUE_CONDITIONAL_EXPRESSION.evaluate(EMPTY_EVALUATION_CONTEXT), is((Value) new UnsignedIntValue(2)));
+        assertThat(TRUE_CONDITIONAL_EXPRESSION.evaluate(EvaluationContext.DUMMY), is((Value) new UnsignedIntValue(2)));
     }
 
     /**
@@ -93,7 +91,7 @@ public class ConditionalExpressionTest {
      */
     @Test
     public void evaluateUndeterminedCondition() {
-        assertThat(UNDEFINED_CONDITIONAL_EXPRESSION.evaluate(EMPTY_EVALUATION_CONTEXT), is(nullValue()));
+        assertThat(UNDEFINED_CONDITIONAL_EXPRESSION.evaluate(EvaluationContext.DUMMY), is(nullValue()));
     }
 
     /**
@@ -102,7 +100,7 @@ public class ConditionalExpressionTest {
      */
     @Test
     public void simplifyFalseCondition() {
-        assertThat(FALSE_CONDITIONAL_EXPRESSION.simplify(EMPTY_EVALUATION_CONTEXT), is(sameInstance(FALSE_PART)));
+        assertThat(FALSE_CONDITIONAL_EXPRESSION.simplify(EvaluationContext.DUMMY), is(sameInstance(FALSE_PART)));
     }
 
     /**
@@ -111,7 +109,7 @@ public class ConditionalExpressionTest {
      */
     @Test
     public void simplifyTrueCondition() {
-        assertThat(TRUE_CONDITIONAL_EXPRESSION.simplify(EMPTY_EVALUATION_CONTEXT), is(sameInstance(TRUE_PART)));
+        assertThat(TRUE_CONDITIONAL_EXPRESSION.simplify(EvaluationContext.DUMMY), is(sameInstance(TRUE_PART)));
     }
 
     /**
@@ -120,7 +118,7 @@ public class ConditionalExpressionTest {
      */
     @Test
     public void simplifyUndeterminedCondition() {
-        assertThat(UNDEFINED_CONDITIONAL_EXPRESSION.simplify(EMPTY_EVALUATION_CONTEXT),
+        assertThat(UNDEFINED_CONDITIONAL_EXPRESSION.simplify(EvaluationContext.DUMMY),
                 is(sameInstance((Expression) ValueExpression.UNDETERMINED)));
     }
 
@@ -142,7 +140,7 @@ public class ConditionalExpressionTest {
     @Test
     public void toIdentifierFalseCondition() {
         assertThat(FALSE_CONDITIONAL_EXPRESSION.toIdentifier(EvaluationContext.DUMMY, new ValueToStringVisitor(
-                EvaluationContext.DUMMY, "???")), is("3"));
+                EvaluationContext.DUMMY, "???")), is(new IdentifierExpression("3", null)));
     }
 
     /**
@@ -152,7 +150,7 @@ public class ConditionalExpressionTest {
     @Test
     public void toIdentifierTrueCondition() {
         assertThat(TRUE_CONDITIONAL_EXPRESSION.toIdentifier(EvaluationContext.DUMMY, new ValueToStringVisitor(
-                EvaluationContext.DUMMY, "???")), is("2"));
+                EvaluationContext.DUMMY, "???")), is(new IdentifierExpression("2", null)));
     }
 
 }

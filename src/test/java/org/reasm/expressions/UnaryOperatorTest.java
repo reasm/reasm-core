@@ -17,15 +17,13 @@ public class UnaryOperatorTest {
 
     private static final UnsignedIntValue UINT_42 = new UnsignedIntValue(42);
 
-    private static final EvaluationContext EMPTY_EVALUATION_CONTEXT = new EvaluationContext(null, 0, null, null);
-
     /**
      * Asserts that {@link UnaryOperator#apply(Value, EvaluationContext)} on {@link UnaryOperator#BITWISE_NOT} performs a bitwise
      * NOT operation.
      */
     @Test
     public void bitwiseNot() {
-        final Value result = UnaryOperator.BITWISE_NOT.apply(UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = UnaryOperator.BITWISE_NOT.apply(UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(~42)));
     }
 
@@ -35,7 +33,7 @@ public class UnaryOperatorTest {
      */
     @Test
     public void logicalNot() {
-        final Value result = UnaryOperator.LOGICAL_NOT.apply(UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = UnaryOperator.LOGICAL_NOT.apply(UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(0)));
     }
 
@@ -44,7 +42,7 @@ public class UnaryOperatorTest {
      */
     @Test
     public void negation() {
-        final Value result = UnaryOperator.NEGATION.apply(UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = UnaryOperator.NEGATION.apply(UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new SignedIntValue(-42)));
     }
 
@@ -54,7 +52,7 @@ public class UnaryOperatorTest {
      */
     @Test
     public void unaryPlus() {
-        final Value result = UnaryOperator.UNARY_PLUS.apply(UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = UnaryOperator.UNARY_PLUS.apply(UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new SignedIntValue(42)));
     }
 

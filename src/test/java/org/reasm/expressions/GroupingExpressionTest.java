@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.reasm.UnsignedIntValue;
 import org.reasm.Value;
 import org.reasm.ValueVisitor;
+import org.reasm.testhelpers.DummySymbolLookup;
 
 /**
  * Test class for {@link GroupingExpression}.
@@ -24,7 +25,7 @@ public class GroupingExpressionTest {
      */
     @Test
     public void evaluate() {
-        assertThat(GROUPING_EXPRESSION.evaluate(new EvaluationContext(null, 0, null, null)), is((Value) new UnsignedIntValue(2)));
+        assertThat(GROUPING_EXPRESSION.evaluate(EvaluationContext.DUMMY), is((Value) new UnsignedIntValue(2)));
     }
 
     /**
@@ -67,8 +68,9 @@ public class GroupingExpressionTest {
      */
     @Test
     public void toIdentifierChildIsIdentifier() {
-        assertThat(new GroupingExpression(new IdentifierExpression("foo")).toIdentifier(EvaluationContext.DUMMY,
-                new ValueToStringVisitor(EvaluationContext.DUMMY, "???")), is("foo"));
+        assertThat(new GroupingExpression(new IdentifierExpression("foo", DummySymbolLookup.DEFAULT)).toIdentifier(
+                EvaluationContext.DUMMY, new ValueToStringVisitor(EvaluationContext.DUMMY, "???")), is(new IdentifierExpression(
+                "foo", DummySymbolLookup.DEFAULT)));
     }
 
     /**
@@ -79,7 +81,7 @@ public class GroupingExpressionTest {
     public void toIdentifierChildIsValue() {
         assertThat(
                 GROUPING_EXPRESSION.toIdentifier(EvaluationContext.DUMMY, new ValueToStringVisitor(EvaluationContext.DUMMY, "???")),
-                is("2"));
+                is(new IdentifierExpression("2", null)));
     }
 
 }

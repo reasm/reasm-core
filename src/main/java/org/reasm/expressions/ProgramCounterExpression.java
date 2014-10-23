@@ -30,7 +30,7 @@ public final class ProgramCounterExpression extends ValueOrientedExpression {
 
     @Nonnull
     @Override
-    public final Value evaluate(@Nonnull EvaluationContext evaluationContext) {
+    public final Value evaluate(EvaluationContext evaluationContext) {
         return new UnsignedIntValue(evaluationContext.getProgramCounter());
     }
 

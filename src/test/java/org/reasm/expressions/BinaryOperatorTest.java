@@ -16,15 +16,13 @@ public class BinaryOperatorTest {
 
     private static final UnsignedIntValue UINT_42 = new UnsignedIntValue(42);
 
-    private static final EvaluationContext EMPTY_EVALUATION_CONTEXT = new EvaluationContext(null, 0, null, null);
-
     /**
      * Asserts that {@link BinaryOperator#apply(Value, Value, EvaluationContext)} on {@link BinaryOperator#ADDITION} performs an
      * addition.
      */
     @Test
     public void addition() {
-        final Value result = BinaryOperator.ADDITION.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.ADDITION.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(42 + 42)));
     }
 
@@ -34,7 +32,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void bitShiftLeft() {
-        final Value result = BinaryOperator.BIT_SHIFT_LEFT.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.BIT_SHIFT_LEFT.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(42L << 42L)));
     }
 
@@ -44,7 +42,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void bitShiftRight() {
-        final Value result = BinaryOperator.BIT_SHIFT_RIGHT.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.BIT_SHIFT_RIGHT.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(42L >> 42L)));
     }
 
@@ -54,7 +52,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void bitwiseAnd() {
-        final Value result = BinaryOperator.BITWISE_AND.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.BITWISE_AND.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(42 & 42)));
     }
 
@@ -64,7 +62,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void bitwiseOr() {
-        final Value result = BinaryOperator.BITWISE_OR.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.BITWISE_OR.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(42 | 42)));
     }
 
@@ -74,7 +72,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void bitwiseXor() {
-        final Value result = BinaryOperator.BITWISE_XOR.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.BITWISE_XOR.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(42 ^ 42)));
     }
 
@@ -84,7 +82,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void differentFrom() {
-        final Value result = BinaryOperator.DIFFERENT_FROM.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.DIFFERENT_FROM.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(0)));
     }
 
@@ -94,7 +92,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void division() {
-        final Value result = BinaryOperator.DIVISION.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.DIVISION.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(42 / 42)));
     }
 
@@ -104,7 +102,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void equalTo() {
-        final Value result = BinaryOperator.EQUAL_TO.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.EQUAL_TO.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(1)));
     }
 
@@ -114,7 +112,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void greaterThan() {
-        final Value result = BinaryOperator.GREATER_THAN.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.GREATER_THAN.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(0)));
     }
 
@@ -124,7 +122,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void greaterThanOrEqualTo() {
-        final Value result = BinaryOperator.GREATER_THAN_OR_EQUAL_TO.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.GREATER_THAN_OR_EQUAL_TO.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(1)));
     }
 
@@ -134,7 +132,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void lessThan() {
-        final Value result = BinaryOperator.LESS_THAN.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.LESS_THAN.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(0)));
     }
 
@@ -144,7 +142,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void lessThanOrEqualTo() {
-        final Value result = BinaryOperator.LESS_THAN_OR_EQUAL_TO.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.LESS_THAN_OR_EQUAL_TO.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(1)));
     }
 
@@ -154,7 +152,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void logicalAnd() {
-        final Value result = BinaryOperator.LOGICAL_AND.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.LOGICAL_AND.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) UINT_42));
     }
 
@@ -164,7 +162,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void logicalOr() {
-        final Value result = BinaryOperator.LOGICAL_OR.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.LOGICAL_OR.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) UINT_42));
     }
 
@@ -174,7 +172,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void modulus() {
-        final Value result = BinaryOperator.MODULUS.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.MODULUS.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(42 % 42)));
     }
 
@@ -184,7 +182,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void multiplication() {
-        final Value result = BinaryOperator.MULTIPLICATION.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.MULTIPLICATION.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(42 * 42)));
     }
 
@@ -194,7 +192,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void strictlyDifferentFrom() {
-        final Value result = BinaryOperator.STRICTLY_DIFFERENT_FROM.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.STRICTLY_DIFFERENT_FROM.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(0)));
     }
 
@@ -204,7 +202,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void strictlyEqualTo() {
-        final Value result = BinaryOperator.STRICTLY_EQUAL_TO.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.STRICTLY_EQUAL_TO.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(1)));
     }
 
@@ -214,7 +212,7 @@ public class BinaryOperatorTest {
      */
     @Test
     public void subtraction() {
-        final Value result = BinaryOperator.SUBTRACTION.apply(UINT_42, UINT_42, EMPTY_EVALUATION_CONTEXT);
+        final Value result = BinaryOperator.SUBTRACTION.apply(UINT_42, UINT_42, EvaluationContext.DUMMY);
         assertThat(result, is((Value) new UnsignedIntValue(42 - 42)));
     }
 

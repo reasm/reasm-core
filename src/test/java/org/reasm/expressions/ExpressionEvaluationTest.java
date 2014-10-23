@@ -79,7 +79,7 @@ public class ExpressionEvaluationTest {
         @Test
         public void test() {
             final ArrayList<AssemblyMessage> messages = new ArrayList<>();
-            Value result = this.run(new EvaluationContext(null, 0, null, new AssemblyMessageCollector(messages)));
+            Value result = this.run(new EvaluationContext(null, 0, new AssemblyMessageCollector(messages)));
             assertThat(result, is(this.expectedResult));
 
             // Check for generated assembly messages.
@@ -4969,7 +4969,7 @@ public class ExpressionEvaluationTest {
         @Test
         public void test() {
             final ArrayList<AssemblyMessage> messages = new ArrayList<>();
-            Double result = ExpressionEvaluation.parseFloat(this.input, new EvaluationContext(null, 0, null,
+            Double result = ExpressionEvaluation.parseFloat(this.input, new EvaluationContext(null, 0,
                     new AssemblyMessageCollector(messages)));
             assertThat(result, is(this.expectedResult));
             if (this.expectedResult == null) {
@@ -5221,7 +5221,7 @@ public class ExpressionEvaluationTest {
         final ArrayList<AssemblyMessage> messages = new ArrayList<>();
 
         ExpressionEvaluation.evaluateComparison(new FunctionValue(new UndeterminedFunction()), new FunctionValue(
-                new UndeterminedFunction()), new EvaluationContext(null, 0, null, new AssemblyMessageCollector(messages)),
+                new UndeterminedFunction()), new EvaluationContext(null, 0, new AssemblyMessageCollector(messages)),
                 ExpressionEvaluation.Comparison.LESS_THAN);
         assertThat(messages, is(empty()));
 
@@ -5229,8 +5229,7 @@ public class ExpressionEvaluationTest {
         System.gc();
 
         ExpressionEvaluation.evaluateComparison(UNDETERMINED_FUNCTION_A_VALUE, UNDETERMINED_FUNCTION_B_VALUE,
-                new EvaluationContext(null, 0, null, new AssemblyMessageCollector(messages)),
-                ExpressionEvaluation.Comparison.LESS_THAN);
+                new EvaluationContext(null, 0, new AssemblyMessageCollector(messages)), ExpressionEvaluation.Comparison.LESS_THAN);
         assertThat(messages, is(empty()));
     }
 
@@ -5244,14 +5243,12 @@ public class ExpressionEvaluationTest {
         final ArrayList<AssemblyMessage> messages = new ArrayList<>();
 
         Value result = ExpressionEvaluation.evaluateComparison(UNDETERMINED_FUNCTION_A_VALUE, UNDETERMINED_FUNCTION_B_VALUE,
-                new EvaluationContext(null, 0, null, new AssemblyMessageCollector(messages)),
-                ExpressionEvaluation.Comparison.LESS_THAN);
+                new EvaluationContext(null, 0, new AssemblyMessageCollector(messages)), ExpressionEvaluation.Comparison.LESS_THAN);
         assertThat(result, is((Value) UINT_1));
         assertThat(messages, is(empty()));
 
         ExpressionEvaluation.evaluateComparison(UNDETERMINED_FUNCTION_B_VALUE, UNDETERMINED_FUNCTION_C_VALUE,
-                new EvaluationContext(null, 0, null, new AssemblyMessageCollector(messages)),
-                ExpressionEvaluation.Comparison.LESS_THAN);
+                new EvaluationContext(null, 0, new AssemblyMessageCollector(messages)), ExpressionEvaluation.Comparison.LESS_THAN);
         assertThat(result, is((Value) UINT_1));
         assertThat(messages, is(empty()));
     }

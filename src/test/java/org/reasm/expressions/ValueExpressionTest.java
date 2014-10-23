@@ -43,7 +43,7 @@ public class ValueExpressionTest {
     public void toIdentifier() {
         assertThat(
                 VALUE_EXPRESSION.toIdentifier(EvaluationContext.DUMMY, new ValueToStringVisitor(EvaluationContext.DUMMY, "???")),
-                is("1"));
+                is(new IdentifierExpression("1", null)));
     }
 
     /**

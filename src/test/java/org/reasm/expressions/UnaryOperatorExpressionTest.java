@@ -25,8 +25,7 @@ public class UnaryOperatorExpressionTest {
      */
     @Test
     public void evaluate() {
-        assertThat(UNARY_OPERATOR_EXPRESSION.evaluate(new EvaluationContext(null, 0, null, null)),
-                is((Value) new SignedIntValue(-2)));
+        assertThat(UNARY_OPERATOR_EXPRESSION.evaluate(EvaluationContext.DUMMY), is((Value) new SignedIntValue(-2)));
     }
 
     /**
@@ -45,7 +44,7 @@ public class UnaryOperatorExpressionTest {
     @Test
     public void toIdentifier() {
         assertThat(UNARY_OPERATOR_EXPRESSION.toIdentifier(EvaluationContext.DUMMY, new ValueToStringVisitor(
-                EvaluationContext.DUMMY, "???")), is("-2"));
+                EvaluationContext.DUMMY, "???")), is(new IdentifierExpression("-2", null)));
     }
 
     /**

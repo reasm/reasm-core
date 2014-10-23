@@ -84,7 +84,7 @@ public class BinaryOperatorExpressionTest {
     @Test
     public void toIdentifier() {
         assertThat(BINARY_OPERATOR_EXPRESSION.toIdentifier(EvaluationContext.DUMMY, new ValueToStringVisitor(
-                EvaluationContext.DUMMY, "???")), is("5"));
+                EvaluationContext.DUMMY, "???")), is(new IdentifierExpression("5", null)));
     }
 
 }

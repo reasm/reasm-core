@@ -1,6 +1,5 @@
 package org.reasm.expressions;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
@@ -15,15 +14,13 @@ import org.reasm.ValueVisitor;
 @Immutable
 public abstract class ExpressionOrientedExpression extends Expression {
 
-    @CheckForNull
     @Override
-    public final Value evaluate(@Nonnull EvaluationContext evaluationContext) {
+    public final Value evaluate(EvaluationContext evaluationContext) {
         return this.simplify(evaluationContext).evaluate(evaluationContext);
     }
 
-    @CheckForNull
     @Override
-    public final String toIdentifier(@Nonnull EvaluationContext evaluationContext, @Nonnull ValueVisitor<String> valueVisitor) {
+    public final IdentifierExpression toIdentifier(EvaluationContext evaluationContext, ValueVisitor<String> valueVisitor) {
         return this.simplify(evaluationContext).toIdentifier(evaluationContext, valueVisitor);
     }
 

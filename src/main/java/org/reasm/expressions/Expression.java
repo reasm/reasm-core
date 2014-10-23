@@ -228,7 +228,7 @@ public abstract class Expression {
     }
 
     @Override
-    public abstract boolean equals(Object obj);
+    public abstract boolean equals(@CheckForNull Object obj);
 
     /**
      * Computes the {@link Value} of this expression.
@@ -245,15 +245,17 @@ public abstract class Expression {
     public abstract int hashCode();
 
     /**
-     * Gets an identifier out of this expression.
+     * Turns this expression into an {@link IdentifierExpression}.
      *
      * @param evaluationContext
      *            the {@link EvaluationContext} in which the expression is evaluated
      * @param valueVisitor
      *            a {@link ValueVisitor} that converts a {@link Value} to a {@link String}
-     * @return the identifier
+     * @return the IdentifierExpression, or <code>null</code> if an identifier could not be produced (due to, e.g., a symbol whose
+     *         value is undetermined)
      */
     @CheckForNull
-    public abstract String toIdentifier(@Nonnull EvaluationContext evaluationContext, @Nonnull ValueVisitor<String> valueVisitor);
+    public abstract IdentifierExpression toIdentifier(@Nonnull EvaluationContext evaluationContext,
+            @Nonnull ValueVisitor<String> valueVisitor);
 
 }

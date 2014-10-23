@@ -1,5 +1,7 @@
 package org.reasm.expressions;
 
+import java.util.Objects;
+
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
@@ -18,6 +20,8 @@ public final class PeriodExpression extends ExpressionOrientedExpression {
     private final Expression leftExpression;
     @Nonnull
     private final Expression rightExpression;
+    @CheckForNull
+    private final SymbolLookup fallbackSymbolLookup;
 
     /**
      * Initializes a new PeriodExpression.
@@ -26,8 +30,14 @@ public final class PeriodExpression extends ExpressionOrientedExpression {
      *            the expression on the left of the period operator
      * @param rightExpression
      *            the expression on the right of the period operator
+     * @param fallbackSymbolLookup
+     *            an object that looks up symbols by name, which will be used to look up the symbol for the constructed
+     *            {@link IdentifierExpression} when the identifier is {@linkplain #simplify(EvaluationContext) simplified} if the
+     *            <code>leftExpression</code> does not {@linkplain #simplify(EvaluationContext) simplify} to an
+     *            {@link IdentifierExpression}, or <code>null</code> to consider the symbol undefined
      */
-    public PeriodExpression(@Nonnull Expression leftExpression, @Nonnull Expression rightExpression) {
+    public PeriodExpression(@Nonnull Expression leftExpression, @Nonnull Expression rightExpression,
+            @CheckForNull SymbolLookup fallbackSymbolLookup) {
         if (leftExpression == null) {
             throw new NullPointerException("leftExpression");
         }
@@ -38,6 +48,7 @@ public final class PeriodExpression extends ExpressionOrientedExpression {
 
         this.leftExpression = leftExpression;
         this.rightExpression = rightExpression;
+        this.fallbackSymbolLookup = fallbackSymbolLookup;
     }
 
     @Override
@@ -54,7 +65,7 @@ public final class PeriodExpression extends ExpressionOrientedExpression {
             return false;
         }
 
-        PeriodExpression other = (PeriodExpression) obj;
+        final PeriodExpression other = (PeriodExpression) obj;
         if (!this.leftExpression.equals(other.leftExpression)) {
             return false;
         }
@@ -63,7 +74,23 @@ public final class PeriodExpression extends ExpressionOrientedExpression {
             return false;
         }
 
+        if (!Objects.equals(this.fallbackSymbolLookup, other.fallbackSymbolLookup)) {
+            return false;
+        }
+
         return true;
+    }
+
+    /**
+     * Gets the {@link SymbolLookup} that will look up the symbol for the constructed {@link IdentifierExpression} when the
+     * identifier is {@linkplain #simplify(EvaluationContext) simplified} if the <code>leftExpression</code> does not
+     * {@linkplain #simplify(EvaluationContext) simplify} to an {@link IdentifierExpression}
+     *
+     * @return the {@link SymbolLookup}
+     */
+    @CheckForNull
+    public final SymbolLookup getFallbackSymbolLookup() {
+        return this.fallbackSymbolLookup;
     }
 
     /**
@@ -92,13 +119,15 @@ public final class PeriodExpression extends ExpressionOrientedExpression {
         int result = 1;
         result = prime * result + this.leftExpression.hashCode();
         result = prime * result + this.rightExpression.hashCode();
+        result = prime * result + Objects.hashCode(this.fallbackSymbolLookup);
         return result;
     }
 
     @Nonnull
     @Override
     public final String toString() {
-        return "PeriodExpression [leftExpression=" + this.leftExpression + ", rightExpression=" + this.rightExpression + "]";
+        return "PeriodExpression [leftExpression=" + this.leftExpression + ", rightExpression=" + this.rightExpression
+                + ", fallbackSymbolLookup=" + this.fallbackSymbolLookup + "]";
     }
 
     @Nonnull
@@ -106,14 +135,20 @@ public final class PeriodExpression extends ExpressionOrientedExpression {
     protected final Expression simplify(@Nonnull EvaluationContext evaluationContext) {
         final ValueVisitor<String> valueVisitor = new ValueToStringVisitor(evaluationContext, ".");
 
-        final String left = this.leftExpression.toIdentifier(evaluationContext, valueVisitor);
-        final String right = this.rightExpression.toIdentifier(evaluationContext, valueVisitor);
+        final IdentifierExpression left = this.leftExpression.toIdentifier(evaluationContext, valueVisitor);
+        final IdentifierExpression right = this.rightExpression.toIdentifier(evaluationContext, valueVisitor);
 
         if (left == null || right == null) {
             return ValueExpression.UNDETERMINED;
         }
 
-        return new IdentifierExpression(left + "." + right);
+        final String identifier = left.getIdentifier() + "." + right.getIdentifier();
+        SymbolLookup symbolLookup = left.getSymbolLookup();
+        if (symbolLookup == null) {
+            symbolLookup = this.fallbackSymbolLookup;
+        }
+
+        return new IdentifierExpression(identifier, symbolLookup);
     }
 
 }

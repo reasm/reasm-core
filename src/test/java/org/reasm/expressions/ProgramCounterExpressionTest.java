@@ -15,7 +15,7 @@ import org.reasm.ValueVisitor;
  */
 public class ProgramCounterExpressionTest {
 
-    private static final EvaluationContext EVALUATION_CONTEXT = new EvaluationContext(null, 1, null, null);
+    private static final EvaluationContext EVALUATION_CONTEXT = new EvaluationContext(null, 1, null);
 
     /**
      * Asserts that {@link ProgramCounterExpression#evaluate(EvaluationContext)} evaluates to the evaluation context's program
@@ -41,7 +41,7 @@ public class ProgramCounterExpressionTest {
     @Test
     public void toIdentifier() {
         assertThat(ProgramCounterExpression.INSTANCE.toIdentifier(EVALUATION_CONTEXT, new ValueToStringVisitor(EVALUATION_CONTEXT,
-                "???")), is("1"));
+                "???")), is(new IdentifierExpression("1", null)));
     }
 
 }

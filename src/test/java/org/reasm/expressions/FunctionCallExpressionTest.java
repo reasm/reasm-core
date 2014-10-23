@@ -120,7 +120,7 @@ public class FunctionCallExpressionTest {
         @Test
         public void simplify() {
             final ArrayList<AssemblyMessage> messages = new ArrayList<>();
-            final Expression result = new FunctionCallExpression(this.function).simplify(new EvaluationContext(null, 0, null,
+            final Expression result = new FunctionCallExpression(this.function).simplify(new EvaluationContext(null, 0,
                     new AssemblyMessageCollector(messages)));
             assertThat(result, is(this.expectedResult));
 
@@ -218,8 +218,7 @@ public class FunctionCallExpressionTest {
      */
     @Test
     public void evaluate() {
-        assertThat(FUNCTION_CALL_EXPRESSION.evaluate(new EvaluationContext(null, 0, null, null)), is((Value) new UnsignedIntValue(
-                100)));
+        assertThat(FUNCTION_CALL_EXPRESSION.evaluate(EvaluationContext.DUMMY), is((Value) new UnsignedIntValue(100)));
     }
 
     /**
@@ -292,7 +291,7 @@ public class FunctionCallExpressionTest {
         final ArrayList<AssemblyMessage> messages = new ArrayList<>();
         final Expression stringAValueExpression = new ValueExpression(STRING_A);
         final Expression result = new FunctionCallExpression(new ValueExpression(IDENTITY_FUNCTION_VALUE), stringAValueExpression)
-                .simplify(new EvaluationContext(null, 0, null, new AssemblyMessageCollector(messages)));
+                .simplify(new EvaluationContext(null, 0, new AssemblyMessageCollector(messages)));
         assertThat(result, is(sameInstance(stringAValueExpression)));
         assertThat(messages, is(empty()));
     }
@@ -317,7 +316,7 @@ public class FunctionCallExpressionTest {
     @Test
     public void toIdentifier() {
         assertThat(FUNCTION_CALL_EXPRESSION.toIdentifier(EvaluationContext.DUMMY, new ValueToStringVisitor(EvaluationContext.DUMMY,
-                "???")), is("100"));
+                "???")), is(new IdentifierExpression("100", null)));
     }
 
 }

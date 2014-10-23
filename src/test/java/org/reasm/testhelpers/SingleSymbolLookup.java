@@ -1,7 +1,5 @@
 package org.reasm.testhelpers;
 
-import static org.junit.Assert.fail;
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
@@ -40,8 +38,7 @@ public final class SingleSymbolLookup implements SymbolLookup {
             return this.symbol;
         }
 
-        fail("Unexpected symbol lookup attempted on name \"" + name + "\"");
-        return null; // unreachable
+        throw new AssertionError("Unexpected symbol lookup attempted on name \"" + name + "\"");
     }
 
 }

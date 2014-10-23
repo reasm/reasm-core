@@ -40,7 +40,7 @@ public class ValueToStringVisitorTest {
     @Test
     public void visitFunction() {
         final ArrayList<AssemblyMessage> messages = new ArrayList<>();
-        final ValueToStringVisitor valueToStringVisitor = new ValueToStringVisitor(new EvaluationContext(null, 0, null,
+        final ValueToStringVisitor valueToStringVisitor = new ValueToStringVisitor(new EvaluationContext(null, 0,
                 new AssemblyMessageCollector(messages)), "???");
         assertThat(valueToStringVisitor.visitFunction(DUMMY_FUNCTION), is(nullValue()));
         assertThat(messages, contains(new EquivalentAssemblyMessage(new FunctionOperandNotApplicableErrorMessage("???"))));
