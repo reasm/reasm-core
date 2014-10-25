@@ -412,9 +412,10 @@ public class AssemblyTest {
         final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, null, null).getSymbol();
         assertThat(assembly.getSymbols(), contains(fooSymbol));
 
-        assertThat(assembly.getScopes().keySet(), contains(fooSymbol));
+        final AssemblyStepLocation assemblyStepLocation = assembly.getSteps().get(1).getLocation();
+        assertThat(assembly.getScopes().keySet(), contains(assemblyStepLocation));
 
-        final Scope scope = assembly.getScopes().get(fooSymbol);
+        final Scope scope = assembly.getScopes().get(assemblyStepLocation);
         assertThat(scope, is(notNullValue()));
 
         assertThat(scope.getLocalSymbols(), contains(new UserSymbolMatcher<>(SymbolContext.VALUE, "bar", SymbolType.CONSTANT,

@@ -120,7 +120,7 @@ public final class Assembly {
     @Nonnull
     private final SymbolTable symbolTable = new SymbolTable();
     @Nonnull
-    private final HashMap<UserSymbol, Scope> scopeTable = new HashMap<>();
+    private final HashMap<AssemblyStepLocation, Scope> scopeTable = new HashMap<>();
     @Nonnull
     private final Iterable<UserSymbol> allSymbols;
     @Nonnull
@@ -143,7 +143,7 @@ public final class Assembly {
     private int forwCounter;
     private int backCounter;
     @CheckForNull
-    private UserSymbol lastDefinedSymbol;
+    private AssemblyStepLocation currentScopeKey;
     @Nonnull
     private final ArrayList<SymbolReference> symbolReferences = new ArrayList<>();
     @Nonnull
@@ -164,7 +164,7 @@ public final class Assembly {
     @Nonnull
     private final IterableProxy<UserSymbol> symbolsProxy = new IterableProxy<>(this.symbolTable);
     @Nonnull
-    private final Map<UserSymbol, Scope> unmodifiableScopeTable = Collections.unmodifiableMap(this.scopeTable);
+    private final Map<AssemblyStepLocation, Scope> unmodifiableScopeTable = Collections.unmodifiableMap(this.scopeTable);
     @Nonnull
     private final List<AssemblyMessage> unmodifiableMessages = Collections.unmodifiableList(this.messages);
     @Nonnull
@@ -284,7 +284,7 @@ public final class Assembly {
      */
     @Nonnull
     public final SymbolLookupContext getCurrentSymbolLookupContext() {
-        return new SymbolLookupContext(this, this.currentNamespace, this.lastDefinedSymbol, this.forwCounter, this.backCounter);
+        return new SymbolLookupContext(this, this.currentNamespace, this.currentScopeKey, this.forwCounter, this.backCounter);
     }
 
     /**
@@ -337,9 +337,9 @@ public final class Assembly {
     /**
      * Gets the scopes for local symbols in this assembly.
      *
-     * @return the map of {@link UserSymbol UserSymbols} to {@link Scope Scopes}
+     * @return the map of {@link AssemblyStepLocation AssemblyStepLocations} to {@link Scope Scopes}
      */
-    public final Map<UserSymbol, Scope> getScopes() {
+    public final Map<AssemblyStepLocation, Scope> getScopes() {
         return this.unmodifiableScopeTable;
     }
 
@@ -852,11 +852,11 @@ public final class Assembly {
      * Gets the scope for the specified key, creating it if it doesn't exist.
      *
      * @param scopeKey
-     *            the last non-local {@link UserSymbol} defined at the location where the scope is requested
+     *            the {@link AssemblyStepLocation} where the scope starts
      * @return the scope
      */
     @Nonnull
-    final Scope getScope(UserSymbol scopeKey) {
+    final Scope getScope(@CheckForNull AssemblyStepLocation scopeKey) {
         Scope scope = this.scopeTable.get(scopeKey);
 
         if (scope == null) {
@@ -977,7 +977,7 @@ public final class Assembly {
         }
 
         if (!isLocalSymbol) {
-            this.lastDefinedSymbol = symbol;
+            this.currentScopeKey = definition.getLocation();
         }
     }
 
@@ -1045,7 +1045,7 @@ public final class Assembly {
         this.programCounter = 0;
         this.forwCounter = 0;
         this.backCounter = 0;
-        this.lastDefinedSymbol = null;
+        this.currentScopeKey = null;
         this.symbolReferences.clear();
         SourceFile mainSourceFile = this.configuration.getMainSourceFile();
         Architecture initialArchitecture = this.configuration.getInitialArchitecture();

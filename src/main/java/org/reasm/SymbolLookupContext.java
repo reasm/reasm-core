@@ -43,11 +43,11 @@ public final class SymbolLookupContext {
     @CheckForNull
     private final Namespace namespace;
     @CheckForNull
-    private final UserSymbol scopeKey;
+    private final AssemblyStepLocation scopeKey;
     private final int forwCounter;
     private final int backCounter;
 
-    SymbolLookupContext(@Nonnull Assembly assembly, @CheckForNull Namespace namespace, @CheckForNull UserSymbol scopeKey,
+    SymbolLookupContext(@Nonnull Assembly assembly, @CheckForNull Namespace namespace, @CheckForNull AssemblyStepLocation scopeKey,
             int forwCounter, int backCounter) {
         this.assembly = assembly;
         this.namespace = namespace;
