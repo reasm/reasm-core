@@ -9,6 +9,7 @@ import static org.reasm.AssemblyTestsCommon.createAssembly;
 import static org.reasm.AssemblyTestsCommon.step;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -52,7 +53,7 @@ public class AssemblyBuilderTest {
         }
 
         // The nil parameter is just to bypass FindBugs's null analysis.
-        abstract void assembleCore3(@Nonnull AssemblyBuilder builder, T nil);
+        abstract void assembleCore3(@Nonnull AssemblyBuilder builder, T nil) throws IOException;
 
     }
 
@@ -138,8 +139,8 @@ public class AssemblyBuilderTest {
     }
 
     /**
-     * Asserts that {@link AssemblyBuilder#appendAssembledData(byte[], int, int)} throws a {@link NullPointerException} when the sum
-     * of the <code>offset</code> parameter and of the <code>length</code> argument is greater than the data array's length.
+     * Asserts that {@link AssemblyBuilder#appendAssembledData(byte[], int, int)} throws an {@link IndexOutOfBoundsException} when
+     * the sum of the <code>offset</code> parameter and of the <code>length</code> argument is greater than the data array's length.
      */
     @Test
     public void appendAssembledDataByteArrayIntIntLengthTooHigh() {
@@ -147,8 +148,8 @@ public class AssemblyBuilderTest {
     }
 
     /**
-     * Asserts that {@link AssemblyBuilder#appendAssembledData(byte[], int, int)} throws a {@link NullPointerException} when the
-     * <code>length</code> argument is less than zero.
+     * Asserts that {@link AssemblyBuilder#appendAssembledData(byte[], int, int)} throws an {@link IndexOutOfBoundsException} when
+     * the <code>length</code> argument is less than zero.
      */
     @Test
     public void appendAssembledDataByteArrayIntIntLengthTooLow() {
@@ -161,25 +162,19 @@ public class AssemblyBuilderTest {
      */
     @Test
     public void appendAssembledDataByteArrayIntIntNullData() {
-        final TestSourceNode node = new TestSourceNode() {
+        final TestSourceNode node = new TestNullPointerExceptionSourceNode<byte[]>("appendAssembledData(byte[], int, int)") {
             @Override
-            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                try {
-                    builder.appendAssembledData(null, 0, 0);
-                } catch (NullPointerException e) {
-                    return;
-                }
-
-                fail("AssemblyBuilder.appendAssembledData(byte[], int, int) should have thrown a NullPointerException");
-            }
+            void assembleCore3(AssemblyBuilder builder, byte[] nil) throws IOException {
+                builder.appendAssembledData(nil, 0, 0);
+            };
         };
 
         assembleNode(node);
     }
 
     /**
-     * Asserts that {@link AssemblyBuilder#appendAssembledData(byte[], int, int)} throws a {@link NullPointerException} when the
-     * <code>offset</code> argument is greater than the data array's length.
+     * Asserts that {@link AssemblyBuilder#appendAssembledData(byte[], int, int)} throws an {@link IndexOutOfBoundsException} when
+     * the <code>offset</code> argument is greater than the data array's length.
      */
     @Test
     public void appendAssembledDataByteArrayIntIntOffsetTooHigh() {
@@ -187,8 +182,8 @@ public class AssemblyBuilderTest {
     }
 
     /**
-     * Asserts that {@link AssemblyBuilder#appendAssembledData(byte[], int, int)} throws a {@link NullPointerException} when the
-     * <code>offset</code> argument is less than zero.
+     * Asserts that {@link AssemblyBuilder#appendAssembledData(byte[], int, int)} throws an {@link IndexOutOfBoundsException} when
+     * the <code>offset</code> argument is less than zero.
      */
     @Test
     public void appendAssembledDataByteArrayIntIntOffsetTooLow() {
@@ -201,16 +196,10 @@ public class AssemblyBuilderTest {
      */
     @Test
     public void appendAssembledDataByteArrayNullData() {
-        final TestSourceNode node = new TestSourceNode() {
+        final TestSourceNode node = new TestNullPointerExceptionSourceNode<byte[]>("appendAssembledData(byte[])") {
             @Override
-            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                try {
-                    builder.appendAssembledData(null);
-                } catch (NullPointerException e) {
-                    return;
-                }
-
-                fail("AssemblyBuilder.appendAssembledData(byte[]) should have thrown a NullPointerException");
+            void assembleCore3(AssemblyBuilder builder, byte[] nil) throws IOException {
+                builder.appendAssembledData(nil);
             }
         };
 
@@ -543,21 +532,31 @@ public class AssemblyBuilderTest {
     }
 
     /**
+     * Asserts that {@link AssemblyBuilder#setCurrentEncoding(Charset)} throws a {@link NullPointerException} when the
+     * <code>encoding</code> argument is <code>null</code>.
+     */
+    @Test
+    public void setCurrentEncodingNull() {
+        final TestSourceNode node = new TestNullPointerExceptionSourceNode<Charset>("setCurrentEncoding()") {
+            @Override
+            void assembleCore3(AssemblyBuilder builder, Charset nil) {
+                builder.setCurrentEncoding(nil);
+            };
+        };
+
+        assembleNode(node);
+    }
+
+    /**
      * Asserts that {@link AssemblyBuilder#setCustomAssemblyData(Object, CustomAssemblyData)} throws a {@link NullPointerException}
      * when the <code>customAssemblyData</code> argument is <code>null</code>.
      */
     @Test
     public void setCustomAssemblyDataNullCustomAssemblyData() {
-        final TestSourceNode node = new TestSourceNode() {
+        final TestSourceNode node = new TestNullPointerExceptionSourceNode<CustomAssemblyData>("setCustomAssemblyData()") {
             @Override
-            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                try {
-                    builder.setCustomAssemblyData(AssemblyBuilderTest.class, null);
-                } catch (NullPointerException e) {
-                    return;
-                }
-
-                fail("AssemblyBuilder.setCustomAssemblyData() should have thrown a NullPointerException");
+            void assembleCore3(AssemblyBuilder builder, CustomAssemblyData nil) throws IOException {
+                builder.setCustomAssemblyData(AssemblyBuilderTest.class, nil);
             }
         };
 
@@ -570,16 +569,10 @@ public class AssemblyBuilderTest {
      */
     @Test
     public void setCustomAssemblyDataNullKey() {
-        final TestSourceNode node = new TestSourceNode() {
+        final TestSourceNode node = new TestNullPointerExceptionSourceNode<CustomAssemblyData>("setCustomAssemblyData()") {
             @Override
-            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                try {
-                    builder.setCustomAssemblyData(null, DUMMY_CUSTOM_ASSEMBLY_DATA);
-                } catch (NullPointerException e) {
-                    return;
-                }
-
-                fail("AssemblyBuilder.setCustomAssemblyData() should have thrown a NullPointerException");
+            void assembleCore3(AssemblyBuilder builder, CustomAssemblyData nil) throws IOException {
+                builder.setCustomAssemblyData(nil, DUMMY_CUSTOM_ASSEMBLY_DATA);
             }
         };
 

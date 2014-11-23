@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -251,6 +252,7 @@ public class AssemblyTest {
         final Configuration configuration = new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT);
         final Assembly assembly = new Assembly(configuration);
         assertThat(assembly.getConfiguration(), is(sameInstance(configuration)));
+        assertThat(assembly.getCurrentEncoding(), is(Charset.forName("UTF-8")));
         assertThat(assembly.getCurrentPass(), is(1));
         assertThat(assembly.getGravity(), is(MessageGravity.NONE));
         assertThat(assembly.getMessages(), is(empty()));
@@ -2218,6 +2220,27 @@ public class AssemblyTest {
     public void resolveSymbolReferenceSymbolContextStringBooleanBooleanSymbolResolutionFallbackNullName() {
         final Assembly assembly = new Assembly(new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT));
         assembly.resolveSymbolReference(SymbolContext.VALUE, null, false, false, null, null);
+    }
+
+    /**
+     * Asserts that {@link Assembly#setCurrentEncoding(Charset)} sets the assembly's current encoding.
+     */
+    @Test
+    public void setCurrentAssembly() {
+        final Charset usAscii = Charset.forName("US-ASCII");
+
+        final TestSourceNode nodeThatSetsTheCurrentEncoding = new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
+                builder.setCurrentEncoding(usAscii);
+            }
+        };
+
+        final Assembly assembly = createAssembly(nodeThatSetsTheCurrentEncoding);
+        step(assembly, AssemblyCompletionStatus.COMPLETE);
+        assertThat(assembly.getGravity(), is(MessageGravity.NONE));
+        assertThat(assembly.getCurrentEncoding(), is(sameInstance(usAscii)));
+        nodeThatSetsTheCurrentEncoding.assertAssembleCount(1);
     }
 
     /**

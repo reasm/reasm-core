@@ -1,6 +1,7 @@
 package org.reasm;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 
 import javax.annotation.CheckForNull;
@@ -505,6 +506,21 @@ public final class AssemblyBuilder {
                 symbolResolutionFallback);
         this.assembly.addSymbolReference(symbolReference);
         return symbolReference;
+    }
+
+    /**
+     * Sets the assembly's current encoding to use when encoding strings to bytes.
+     *
+     * @param encoding
+     *            the encoding to set as the current encoding
+     */
+    public final void setCurrentEncoding(@Nonnull Charset encoding) {
+        if (encoding == null) {
+            throw new NullPointerException("encoding");
+        }
+
+        this.checkState();
+        this.assembly.setCurrentEncoding(encoding);
     }
 
     /**

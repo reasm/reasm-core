@@ -3,6 +3,7 @@ package org.reasm;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +40,8 @@ import com.google.common.collect.Iterables;
  * @author Francis Gagné
  */
 public final class Assembly {
+
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     /**
      * Builds the fully qualified name of a symbol name in a namespace.
@@ -156,6 +159,8 @@ public final class Assembly {
     private Namespace currentNamespace;
     @Nonnull
     private final ArrayList<TransformationBlock> transformationBlockStack = new ArrayList<>();
+    @Nonnull
+    private Charset currentEncoding = UTF_8;
 
     @Nonnull
     private final Map<Object, CustomAssemblyData> customAssemblyData = new HashMap<>();
@@ -266,6 +271,16 @@ public final class Assembly {
     @Nonnull
     public final Configuration getConfiguration() {
         return this.configuration;
+    }
+
+    /**
+     * Gets the current encoding to use when encoding strings to bytes. The default encoding is UTF-8.
+     *
+     * @return the {@link Charset} that represents the current encoding
+     */
+    @Nonnull
+    public final Charset getCurrentEncoding() {
+        return this.currentEncoding;
     }
 
     /**
@@ -878,6 +893,11 @@ public final class Assembly {
         this.completeAssembly(exception);
     }
 
+    /** @see AssemblyBuilder#setCurrentEncoding(Charset) */
+    final void setCurrentEncoding(@Nonnull Charset encoding) {
+        this.currentEncoding = encoding;
+    }
+
     /** @see AssemblyBuilder#setCustomAssemblyData(Object, CustomAssemblyData) */
     final void setCustomAssemblyData(@Nonnull Object key, @Nonnull CustomAssemblyData customAssemblyData) {
         this.customAssemblyData.put(key, customAssemblyData);
@@ -1053,6 +1073,7 @@ public final class Assembly {
                 null, null, false), null));
         this.currentNamespace = null;
         ++this.currentPass;
+        this.currentEncoding = UTF_8;
 
         for (CustomAssemblyData customAssemblyData : this.customAssemblyData.values()) {
             customAssemblyData.startedNewPass();
