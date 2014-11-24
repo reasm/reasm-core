@@ -18,18 +18,17 @@ class OutputImpl extends Output implements Closeable {
 
     private boolean closed;
     @Nonnull
-    private byte[] memoryData;
+    private ByteBuffer memoryData;
     @CheckForNull
     private Path tempFile;
     @CheckForNull
     private FileChannel tempFileChannel;
-    private int memoryDataSize;
 
     OutputImpl(int memoryDataSize) {
         try {
-            this.memoryData = new byte[memoryDataSize == 0 ? DEFAULT_MEMORY_SIZE : memoryDataSize];
+            this.memoryData = ByteBuffer.allocate(memoryDataSize == 0 ? DEFAULT_MEMORY_SIZE : memoryDataSize);
         } catch (OutOfMemoryError e) {
-            this.memoryData = new byte[DEFAULT_MEMORY_SIZE];
+            this.memoryData = ByteBuffer.allocate(DEFAULT_MEMORY_SIZE);
         }
     }
 
@@ -56,8 +55,11 @@ class OutputImpl extends Output implements Closeable {
 
         final FileChannel fileChannel = this.tempFileChannel;
         if (fileChannel == null) {
-            final int putLength = Math.min(buffer.remaining(), this.memoryDataSize - (int) fromOffset);
-            buffer.put(this.memoryData, (int) fromOffset, putLength);
+            final int putLength = Math.min(buffer.remaining(), this.memoryData.position() - (int) fromOffset);
+            final ByteBuffer src = this.memoryData.duplicate();
+            src.position((int) fromOffset);
+            src.limit(src.position() + putLength);
+            buffer.put(src);
             return putLength;
         }
 
@@ -76,10 +78,10 @@ class OutputImpl extends Output implements Closeable {
         this.checkClosed();
 
         if (this.tempFileChannel != null) {
-            return this.tempFileChannel.position() + this.memoryDataSize;
+            return this.tempFileChannel.position() + this.memoryData.position();
         }
 
-        return this.memoryDataSize;
+        return this.memoryData.position();
     }
 
     @Override
@@ -92,17 +94,16 @@ class OutputImpl extends Output implements Closeable {
 
         final FileChannel fileChannel = this.tempFileChannel;
         if (fileChannel == null) {
-            out.write(this.memoryData, 0, this.memoryDataSize);
+            out.write(this.memoryData.array(), 0, this.memoryData.position());
         } else {
             this.flush();
-            final ByteBuffer bb = ByteBuffer.wrap(this.memoryData);
             long previousPosition = fileChannel.position();
             try {
                 fileChannel.position(0);
                 int bytesRead;
-                while ((bytesRead = fileChannel.read(bb)) != -1) {
-                    out.write(this.memoryData, 0, bytesRead);
-                    bb.position(0);
+                while ((bytesRead = fileChannel.read(this.memoryData)) != -1) {
+                    out.write(this.memoryData.array(), 0, bytesRead);
+                    this.memoryData.clear();
                 }
             } finally {
                 fileChannel.position(previousPosition);
@@ -146,13 +147,13 @@ class OutputImpl extends Output implements Closeable {
             this.tempFileChannel.truncate(0);
         }
 
-        this.memoryDataSize = 0;
+        this.memoryData.clear();
     }
 
     void write(byte b) throws IOException {
         this.checkClosed();
 
-        if (this.memoryDataSize >= this.memoryData.length) {
+        if (this.memoryData.position() >= this.memoryData.limit()) {
             if (this.tempFileChannel == null) {
                 this.createTempFile();
             }
@@ -160,7 +161,7 @@ class OutputImpl extends Output implements Closeable {
             this.flush();
         }
 
-        this.memoryData[this.memoryDataSize++] = b;
+        this.memoryData.put(b);
     }
 
     void write(@Nonnull byte[] data) throws IOException {
@@ -170,7 +171,7 @@ class OutputImpl extends Output implements Closeable {
     void write(@Nonnull byte[] data, int start, int length) throws IOException {
         this.checkClosed();
 
-        if (this.memoryDataSize + length > this.memoryData.length) {
+        if (this.memoryData.position() + length > this.memoryData.limit()) {
             if (this.tempFileChannel == null) {
                 this.createTempFile();
             }
@@ -178,11 +179,10 @@ class OutputImpl extends Output implements Closeable {
             this.flush();
         }
 
-        if (length > this.memoryData.length) {
-            this.writeToTempFile(data, start, length);
+        if (length > this.memoryData.limit()) {
+            this.writeToTempFile(ByteBuffer.wrap(data, start, length));
         } else {
-            System.arraycopy(data, start, this.memoryData, this.memoryDataSize, length);
-            this.memoryDataSize += length;
+            this.memoryData.put(data, start, length);
         }
     }
 
@@ -200,18 +200,18 @@ class OutputImpl extends Output implements Closeable {
     }
 
     private void flush() throws IOException {
-        this.writeToTempFile(this.memoryData, 0, this.memoryDataSize);
-        this.memoryDataSize = 0;
+        this.memoryData.flip();
+        this.writeToTempFile(this.memoryData);
+        this.memoryData.clear();
     }
 
-    private void writeToTempFile(@Nonnull byte[] data, int offset, int length) throws IOException {
+    private void writeToTempFile(@Nonnull ByteBuffer data) throws IOException {
         final FileChannel fileChannel = this.tempFileChannel;
         assert fileChannel != null;
 
-        final ByteBuffer buffer = ByteBuffer.wrap(data, offset, length);
         do {
-            fileChannel.write(buffer);
-        } while (buffer.hasRemaining());
+            fileChannel.write(data);
+        } while (data.hasRemaining());
     }
 
 }
