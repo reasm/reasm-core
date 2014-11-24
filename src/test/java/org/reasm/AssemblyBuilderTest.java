@@ -9,6 +9,7 @@ import static org.reasm.AssemblyTestsCommon.createAssembly;
 import static org.reasm.AssemblyTestsCommon.step;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
@@ -199,6 +200,22 @@ public class AssemblyBuilderTest {
         final TestSourceNode node = new TestNullPointerExceptionSourceNode<byte[]>("appendAssembledData(byte[])") {
             @Override
             void assembleCore3(AssemblyBuilder builder, byte[] nil) throws IOException {
+                builder.appendAssembledData(nil);
+            }
+        };
+
+        assembleNode(node);
+    }
+
+    /**
+     * Asserts that {@link AssemblyBuilder#appendAssembledData(ByteBuffer)} throws a {@link NullPointerException} when the
+     * <code>data</code> argument is <code>null</code>.
+     */
+    @Test
+    public void appendAssembledDataByteBufferNullData() {
+        final TestSourceNode node = new TestNullPointerExceptionSourceNode<ByteBuffer>("appendAssembledData(ByteBuffer)") {
+            @Override
+            void assembleCore3(AssemblyBuilder builder, ByteBuffer nil) throws IOException {
                 builder.appendAssembledData(nil);
             }
         };

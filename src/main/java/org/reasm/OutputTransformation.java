@@ -1,6 +1,7 @@
 package org.reasm;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import javax.annotation.Nonnull;
 
@@ -13,8 +14,8 @@ public interface OutputTransformation {
 
     /**
      * Transforms an output and writes the result to the {@link Assembly} managed by the specified {@link AssemblyBuilder}, using
-     * {@link AssemblyBuilder#appendAssembledData(byte)}, {@link AssemblyBuilder#appendAssembledData(byte[])} and/or
-     * {@link AssemblyBuilder#appendAssembledData(byte[], int, int)}.
+     * {@link AssemblyBuilder#appendAssembledData(byte)}, {@link AssemblyBuilder#appendAssembledData(byte[])},
+     * {@link AssemblyBuilder#appendAssembledData(byte[], int, int)} and/or {@link AssemblyBuilder#appendAssembledData(ByteBuffer)}.
      *
      * @param output
      *            the output to transform

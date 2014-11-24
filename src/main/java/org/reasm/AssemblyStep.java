@@ -1,6 +1,7 @@
 package org.reasm;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import javax.annotation.Nonnull;
 
@@ -97,7 +98,7 @@ public final class AssemblyStep {
      * @throws IOException
      *             an I/O exception occurred while performing the operation
      */
-    final void appendAssembledData(byte[] data) throws IOException {
+    final void appendAssembledData(@Nonnull byte[] data) throws IOException {
         this.output.write(data);
         this.assembledDataLength += data.length;
     }
@@ -114,9 +115,15 @@ public final class AssemblyStep {
      * @throws IOException
      *             an I/O exception occurred while performing the operation
      */
-    final void appendAssembledData(byte[] data, int offset, int length) throws IOException {
+    final void appendAssembledData(@Nonnull byte[] data, int offset, int length) throws IOException {
         this.output.write(data, offset, length);
         this.assembledDataLength += length;
+    }
+
+    final void appendAssembledData(@Nonnull ByteBuffer data) throws IOException {
+        final int remaining = data.remaining();
+        this.output.write(data);
+        this.assembledDataLength += remaining;
     }
 
     final boolean hasSideEffects() {

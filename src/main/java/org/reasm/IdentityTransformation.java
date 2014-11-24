@@ -19,14 +19,14 @@ public final class IdentityTransformation implements OutputTransformation {
     @Override
     public final void transform(Output output, AssemblyBuilder builder) throws IOException {
         final long size = output.size();
-        final byte[] buf = new byte[0x10000];
-        final ByteBuffer byteBuffer = ByteBuffer.wrap(buf);
+        final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(0x10000);
 
         long offset = 0;
         while (offset < size) {
-            byteBuffer.rewind();
+            byteBuffer.clear();
             final int bytesRead = output.read(offset, byteBuffer);
-            builder.appendAssembledData(buf, 0, bytesRead);
+            byteBuffer.flip();
+            builder.appendAssembledData(byteBuffer);
             offset += bytesRead;
         }
     }

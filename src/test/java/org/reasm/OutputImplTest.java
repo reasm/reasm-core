@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import javax.annotation.Nonnull;
 
@@ -227,6 +228,70 @@ public class OutputImplTest {
             checkOutput(o, bytes);
 
             o.write(bytes);
+            assertThat(o.size(), is(bytes.length * 2L));
+            checkOutput(o, new byte[0x8000]);
+        }
+    }
+
+    /**
+     * Asserts that {@link OutputImpl#write(ByteBuffer)} writes the contents of a {@link ByteBuffer} to the output.
+     *
+     * @throws IOException
+     *             an I/O exception occurred
+     */
+    @Test
+    public void writeByteBuffer() throws IOException {
+        try (final OutputImpl o = new OutputImpl(0x100)) {
+            final byte[] bytes0 = new byte[] { 12, 34, 56 };
+            final ByteBuffer bb0 = ByteBuffer.wrap(bytes0);
+            o.write(bb0);
+            assertThat(o.size(), is((long) bytes0.length));
+            checkOutput(o, bytes0);
+
+            final byte[] bytes1 = new byte[] { 65, 43, 21 };
+            final ByteBuffer bb1 = ByteBuffer.wrap(bytes1);
+            o.write(bb1);
+            assertThat(o.size(), is((long) (bytes0.length + bytes1.length)));
+
+            byte[] allBytes = new byte[bytes0.length + bytes1.length];
+            System.arraycopy(bytes0, 0, allBytes, 0, bytes0.length);
+            System.arraycopy(bytes1, 0, allBytes, bytes0.length, bytes1.length);
+            checkOutput(o, allBytes);
+
+            o.write(ByteBuffer.wrap(new byte[0]));
+            assertThat(o.size(), is((long) (bytes0.length + bytes1.length)));
+            checkOutput(o, allBytes);
+
+            final byte[] bytes2 = new byte[] { 77, 44, 55, 66, 33 };
+            final int bb2Offset = 1;
+            final int bb2Length = 3;
+            final ByteBuffer bb2 = ByteBuffer.wrap(bytes2, bb2Offset, bb2Length);
+            o.write(bb2);
+            assertThat(o.size(), is((long) (bytes0.length + bytes1.length + bb2Length)));
+            byte[] allBytes2 = Arrays.copyOf(allBytes, bytes0.length + bytes1.length + bb2Length);
+            System.arraycopy(bytes2, bb2Offset, allBytes2, bytes0.length + bytes1.length, bb2Length);
+            checkOutput(o, allBytes2);
+        }
+    }
+
+    /**
+     * Asserts that {@link OutputImpl#write(byte[])} writes the contents of a {@link ByteBuffer} to the output when a temporary file
+     * is used.
+     *
+     * @throws IOException
+     *             an I/O exception occurred
+     */
+    @Test
+    public void writeByteBufferFile() throws IOException {
+        try (final OutputImpl o = new OutputImpl(0x100)) {
+            final byte[] bytes = new byte[0x4000];
+            final ByteBuffer bb = ByteBuffer.wrap(bytes);
+            o.write(bb);
+            assertThat(o.size(), is((long) bytes.length));
+            checkOutput(o, bytes);
+
+            bb.rewind();
+            o.write(bb);
             assertThat(o.size(), is(bytes.length * 2L));
             checkOutput(o, new byte[0x8000]);
         }

@@ -7,6 +7,7 @@ import static org.reasm.AssemblyTestsCommon.createAssembly;
 import static org.reasm.AssemblyTestsCommon.step;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import javax.annotation.Nonnull;
 
@@ -83,6 +84,29 @@ public class AssemblyStepTest {
 
                 builder.appendAssembledData(arbitraryData, 1, 2);
                 assertThat(builder.getStep().getAssembledDataLength(), is(2L));
+                checkOutput(builder.getAssembly(), writtenData);
+                checkOutput(builder.getStep(), writtenData);
+            }
+        };
+
+        assembleNode(nodeThatAppendsManyBytesOfAssembledData);
+    }
+
+    /**
+     * Asserts that {@link AssemblyStep#appendAssembledData(ByteBuffer)} appends the contents of a {@link ByteBuffer} to the
+     * assembly and that the length of the assembled data on the step increments by the size of the contents that was appended.
+     */
+    @Test
+    public void appendAssembledDataByteBuffer() {
+        final TestSourceNode nodeThatAppendsManyBytesOfAssembledData = new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
+                final byte[] arbitraryData = new byte[] { 1, 2, 3, 4 };
+                final byte[] writtenData = new byte[] { 2, 3 };
+                final ByteBuffer bb = ByteBuffer.wrap(arbitraryData, 1, 2);
+
+                builder.appendAssembledData(bb);
+                assertThat(builder.getStep().getAssembledDataLength(), is((long) writtenData.length));
                 checkOutput(builder.getAssembly(), writtenData);
                 checkOutput(builder.getStep(), writtenData);
             }

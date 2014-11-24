@@ -1,6 +1,7 @@
 package org.reasm;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
 
@@ -140,6 +141,23 @@ public final class AssemblyBuilder {
 
         this.checkState();
         this.step.appendAssembledData(data, offset, length);
+    }
+
+    /**
+     * Appends bytes to the assembled representation of the current step of the assembly that this AssemblyBuilder manages.
+     *
+     * @param data
+     *            a {@link ByteBuffer}
+     * @throws IOException
+     *             an I/O exception occurred while performing the operation
+     */
+    public final void appendAssembledData(@Nonnull ByteBuffer data) throws IOException {
+        if (data == null) {
+            throw new NullPointerException("data");
+        }
+
+        this.checkState();
+        this.step.appendAssembledData(data);
     }
 
     /**

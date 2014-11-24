@@ -186,6 +186,25 @@ class OutputImpl extends Output implements Closeable {
         }
     }
 
+    void write(@Nonnull ByteBuffer data) throws IOException {
+        this.checkClosed();
+
+        final int length = data.remaining();
+        if (this.memoryData.position() + length > this.memoryData.limit()) {
+            if (this.tempFileChannel == null) {
+                this.createTempFile();
+            }
+
+            this.flush();
+        }
+
+        if (length > this.memoryData.limit()) {
+            this.writeToTempFile(data);
+        } else {
+            this.memoryData.put(data);
+        }
+    }
+
     private void checkClosed() {
         if (this.closed) {
             throw new IllegalStateException("Output was closed");
