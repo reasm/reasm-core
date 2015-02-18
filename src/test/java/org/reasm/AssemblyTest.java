@@ -71,6 +71,17 @@ public class AssemblyTest {
         };
     }
 
+    private static void checkSymbol(String symbolName, SymbolType symbolType, Assembly assembly,
+            Collection<Matcher<? super UserSymbol>> symbols) {
+        final SymbolReference symbolReference = assembly.resolveSymbolReference(SymbolContext.VALUE, symbolName, false, false,
+                null, null);
+        final Symbol symbol = symbolReference.getSymbol();
+        assertThat(symbol, is(notNullValue()));
+        assertThat(symbol, is(instanceOf(UserSymbol.class)));
+        assertThat((UserSymbol) symbol, is(new UserSymbolMatcher<>(SymbolContext.VALUE, symbolName, symbolType, FORTY_TWO)));
+        symbols.add(is(sameInstance(symbol)));
+    }
+
     private static TestSourceNode createNodeThatAddsAnError() {
         return new TestSourceNode() {
             @Override
@@ -178,14 +189,7 @@ public class AssemblyTest {
 
         final Collection<Matcher<? super UserSymbol>> symbols = new ArrayList<>();
         for (String actualSymbolName : actualSymbolNames) {
-            final SymbolReference symbolReference = assembly.resolveSymbolReference(SymbolContext.VALUE, actualSymbolName, false,
-                    false, null, null);
-            final Symbol symbol = symbolReference.getSymbol();
-            assertThat(symbol, is(notNullValue()));
-            assertThat(symbol, is(instanceOf(UserSymbol.class)));
-            assertThat((UserSymbol) symbol,
-                    is(new UserSymbolMatcher<>(SymbolContext.VALUE, actualSymbolName, symbolType, FORTY_TWO)));
-            symbols.add(is(sameInstance(symbol)));
+            checkSymbol(actualSymbolName, symbolType, assembly, symbols);
         }
 
         assertThat(assembly.getSymbols(), containsInAnyOrder(symbols));
@@ -425,6 +429,42 @@ public class AssemblyTest {
     }
 
     /**
+     * Asserts that a symbol defined with a '.' as the first character of its name (a "suffix symbol") has the name of the last
+     * non-suffix symbol prefixed to its name.
+     */
+    @Test
+    public void defineSuffixSymbol() {
+        final TestSourceNode nodeThatDefinesTheFooSymbol = createNodeThatDefinesASymbol("foo", false, SymbolType.CONSTANT,
+                FORTY_TWO);
+        final TestSourceNode nodeThatDefinesTheBarSymbol = createNodeThatDefinesASymbol(".bar", false, SymbolType.CONSTANT,
+                FORTY_TWO);
+        final SourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatDefinesTheFooSymbol,
+                nodeThatDefinesTheBarSymbol));
+        final Assembly assembly = createAssembly(rootNode);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.COMPLETE);
+        assertThat(assembly.getGravity(), is(MessageGravity.NONE));
+        nodeThatDefinesTheFooSymbol.assertAssembleCount(1);
+        nodeThatDefinesTheBarSymbol.assertAssembleCount(1);
+
+        final Collection<Matcher<? super UserSymbol>> symbols = new ArrayList<>();
+
+        checkSymbol("foo", SymbolType.CONSTANT, assembly, symbols);
+        checkSymbol("foo.bar", SymbolType.CONSTANT, assembly, symbols);
+
+        assertThat(assembly.getSymbols(), containsInAnyOrder(symbols));
+    }
+
+    /**
+     * Asserts that a suffix symbol defined before any non-suffix symbol has been defined has nothing prefixed to its name.
+     */
+    @Test
+    public void defineSuffixSymbolBeforeNonSuffixSymbol() {
+        defineSymbol(".foo", ".foo");
+    }
+
+    /**
      * Asserts that a symbol defined with name "a" is not treated specially.
      */
     @Test
@@ -507,6 +547,38 @@ public class AssemblyTest {
         assertThat(scope.getLocalSymbols(), containsInAnyOrder(ImmutableList.<Matcher<? super UserSymbol>> of(
                 new UserSymbolMatcher<>(SymbolContext.VALUE, "foo", SymbolType.CONSTANT, FORTY_TWO), new UserSymbolMatcher<>(
                         SymbolContext.VALUE, "bar", SymbolType.CONSTANT, FORTY_TWO))));
+    }
+
+    /**
+     * Asserts that two suffix symbols defined without a non-suffix symbol being defined in-between have the same prefix.
+     */
+    @Test
+    public void defineTwoSuffixSymbols() {
+        final TestSourceNode nodeThatDefinesTheFooSymbol = createNodeThatDefinesASymbol("foo", false, SymbolType.CONSTANT,
+                FORTY_TWO);
+        final TestSourceNode nodeThatDefinesTheBarSymbol = createNodeThatDefinesASymbol(".bar", false, SymbolType.CONSTANT,
+                FORTY_TWO);
+        final TestSourceNode nodeThatDefinesTheBazSymbol = createNodeThatDefinesASymbol(".baz", false, SymbolType.CONSTANT,
+                FORTY_TWO);
+        final SourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatDefinesTheFooSymbol,
+                nodeThatDefinesTheBarSymbol, nodeThatDefinesTheBazSymbol));
+        final Assembly assembly = createAssembly(rootNode);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.COMPLETE);
+        assertThat(assembly.getGravity(), is(MessageGravity.NONE));
+        nodeThatDefinesTheFooSymbol.assertAssembleCount(1);
+        nodeThatDefinesTheBarSymbol.assertAssembleCount(1);
+        nodeThatDefinesTheBazSymbol.assertAssembleCount(1);
+
+        final Collection<Matcher<? super UserSymbol>> symbols = new ArrayList<>();
+
+        checkSymbol("foo", SymbolType.CONSTANT, assembly, symbols);
+        checkSymbol("foo.bar", SymbolType.CONSTANT, assembly, symbols);
+        checkSymbol("foo.baz", SymbolType.CONSTANT, assembly, symbols);
+
+        assertThat(assembly.getSymbols(), containsInAnyOrder(symbols));
     }
 
     /**
@@ -1431,6 +1503,34 @@ public class AssemblyTest {
             fail("Assembly.getCurrentBlock() should have thrown an IllegalStateException");
         } catch (IllegalStateException e) {
         }
+    }
+
+    /**
+     * Asserts that {@link Assembly#isAnonymousSymbolReference(String)} returns the expected result for various inputs.
+     */
+    @Test
+    public void isAnonymousSymbolReference() {
+        assertThat(Assembly.isAnonymousSymbolReference(""), is(false));
+        assertThat(Assembly.isAnonymousSymbolReference("A"), is(false));
+        assertThat(Assembly.isAnonymousSymbolReference("+"), is(true));
+        assertThat(Assembly.isAnonymousSymbolReference("+++"), is(true));
+        assertThat(Assembly.isAnonymousSymbolReference("-"), is(true));
+        assertThat(Assembly.isAnonymousSymbolReference("---"), is(true));
+        assertThat(Assembly.isAnonymousSymbolReference("++-"), is(false));
+        assertThat(Assembly.isAnonymousSymbolReference("/"), is(false));
+    }
+
+    /**
+     * Asserts that {@link Assembly#isSuffixSymbolName(String)} returns the expected result for various inputs.
+     */
+    @Test
+    public void isSuffixSymbolName() {
+        assertThat(Assembly.isSuffixSymbolName(""), is(false));
+        assertThat(Assembly.isSuffixSymbolName("A"), is(false));
+        assertThat(Assembly.isSuffixSymbolName("ABC"), is(false));
+        assertThat(Assembly.isSuffixSymbolName("."), is(true));
+        assertThat(Assembly.isSuffixSymbolName(".A"), is(true));
+        assertThat(Assembly.isSuffixSymbolName(".ABC"), is(true));
     }
 
     /**

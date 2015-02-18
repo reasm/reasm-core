@@ -5,7 +5,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
-import static org.reasm.AssemblyTestsCommon.NODE_THAT_SHOULD_NOT_BE_REACHED;
 import static org.reasm.AssemblyTestsCommon.createAssembly;
 import static org.reasm.AssemblyTestsCommon.createNodeThatDefinesASymbol;
 import static org.reasm.AssemblyTestsCommon.createNodeThatDoesNothing;
@@ -15,7 +14,6 @@ import static org.reasm.AssemblyTestsCommon.step;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.junit.Test;
 import org.reasm.source.SimpleCompositeSourceNode;
 import org.reasm.source.SourceFile;
 import org.reasm.source.SourceNode;
@@ -206,27 +204,6 @@ public class SymbolLookupContextTest extends ObjectHashCodeEqualsContract {
     public SymbolLookupContextTest() {
         super(MAIN_OBJECT, OTHER_EQUAL_OBJECT, ANOTHER_EQUAL_OBJECT, new Object[] { DIFFERENT_OBJECT_0, DIFFERENT_OBJECT_1,
                 DIFFERENT_OBJECT_2, DIFFERENT_OBJECT_3, DIFFERENT_OBJECT_4, new Object() });
-    }
-
-    /**
-     * Asserts that {@link SymbolLookupContext#expandAnonymousSymbol(String)} returns the empty string when given the empty string.
-     */
-    @Test
-    public void expandAnonymousSymbolEmpty() {
-        final Assembly assembly = createAssembly(NODE_THAT_SHOULD_NOT_BE_REACHED);
-        final SymbolLookupContext lookupContext = new SymbolLookupContext(assembly, null, null, 0, 0);
-        assertThat(lookupContext.expandAnonymousSymbol(""), is(""));
-    }
-
-    /**
-     * Asserts that {@link SymbolLookupContext#expandAnonymousSymbol(String)} returns the given string when it starts with '+' but
-     * not all characters are '+'.
-     */
-    @Test
-    public void expandAnonymousSymbolMisleading() {
-        final Assembly assembly = createAssembly(NODE_THAT_SHOULD_NOT_BE_REACHED);
-        final SymbolLookupContext lookupContext = new SymbolLookupContext(assembly, null, null, 0, 0);
-        assertThat(lookupContext.expandAnonymousSymbol("+a"), is("+a"));
     }
 
 }

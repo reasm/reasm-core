@@ -85,7 +85,7 @@ public final class SymbolReference {
             boolean bypassNamespaceResolution, boolean isDefinition, @Nonnull SymbolLookupContext lookupContext,
             @CheckForNull AssemblyStep step, @CheckForNull SymbolResolutionFallback symbolResolutionFallback) {
         this.contexts = contexts;
-        this.name = lookupContext.expandAnonymousSymbol(name);
+        this.name = lookupContext.expandSymbol(name, local);
         this.bypassNamespaceResolution = bypassNamespaceResolution;
         this.isDefinition = isDefinition;
         this.lookupContext = lookupContext;

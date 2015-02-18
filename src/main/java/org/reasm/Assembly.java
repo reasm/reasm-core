@@ -84,6 +84,10 @@ public final class Assembly {
         return true;
     }
 
+    static boolean isSuffixSymbolName(@Nonnull String name) {
+        return name.length() >= 1 && name.charAt(0) == '.';
+    }
+
     /**
      * Notifies the custom assembly data objects that the assembly process has completed.
      *
@@ -147,6 +151,8 @@ public final class Assembly {
     private int backCounter;
     @CheckForNull
     private AssemblyStepLocation currentScopeKey;
+    @CheckForNull
+    private UserSymbol lastNonSuffixSymbol;
     @Nonnull
     private final ArrayList<SymbolReference> symbolReferences = new ArrayList<>();
     @Nonnull
@@ -299,7 +305,8 @@ public final class Assembly {
      */
     @Nonnull
     public final SymbolLookupContext getCurrentSymbolLookupContext() {
-        return new SymbolLookupContext(this, this.currentNamespace, this.currentScopeKey, this.forwCounter, this.backCounter);
+        return new SymbolLookupContext(this, this.currentNamespace, this.currentScopeKey, this.lastNonSuffixSymbol,
+                this.forwCounter, this.backCounter);
     }
 
     /**
@@ -998,6 +1005,10 @@ public final class Assembly {
 
         if (!isLocalSymbol) {
             this.currentScopeKey = definition.getLocation();
+
+            if (!Assembly.isSuffixSymbolName(finalSymbolName)) {
+                this.lastNonSuffixSymbol = symbol;
+            }
         }
     }
 
@@ -1066,6 +1077,7 @@ public final class Assembly {
         this.forwCounter = 0;
         this.backCounter = 0;
         this.currentScopeKey = null;
+        this.lastNonSuffixSymbol = null;
         this.symbolReferences.clear();
         SourceFile mainSourceFile = this.configuration.getMainSourceFile();
         Architecture initialArchitecture = this.configuration.getInitialArchitecture();
