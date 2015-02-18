@@ -991,7 +991,7 @@ public final class Assembly {
         final UserSymbol symbol = (UserSymbol) symbolReference.getSymbol();
         assert symbol != null;
 
-        if (symbol.define(this, definition, symbolType, finalSymbolName, value)) {
+        if (symbol.define(this, definition, symbolType, value)) {
             // Update the symbol reference's value, because we just changed it.
             symbolReference.setValue(value);
         }

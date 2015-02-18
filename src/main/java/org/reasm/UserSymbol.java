@@ -107,14 +107,12 @@ public final class UserSymbol extends Symbol {
      *            the assembly step in which the symbol is defined
      * @param type
      *            the type of symbol
-     * @param finalName
-     *            the final name of the symbol
      * @param value
      *            the value of the symbol
      * @return <code>true</code> if the symbol was defined successfully, or <code>false</code> if an error occurred
      */
     final boolean define(@Nonnull Assembly assembly, @Nonnull AssemblyStep step, @Nonnull SymbolType type,
-            @Nonnull String finalName, @CheckForNull Object value) {
+            @CheckForNull Object value) {
         // Validate that the value has the right type.
         this.context.getValueType().cast(value);
 
