@@ -290,6 +290,16 @@ public final class Assembly {
     }
 
     /**
+     * Gets the current namespace for symbol lookup and symbol definition.
+     *
+     * @return the current namespace
+     */
+    @CheckForNull
+    public final Namespace getCurrentNamespace() {
+        return this.currentNamespace;
+    }
+
+    /**
      * Gets the current pass in this assembly.
      *
      * @return the current pass
@@ -1083,9 +1093,9 @@ public final class Assembly {
         Architecture initialArchitecture = this.configuration.getInitialArchitecture();
         this.blockStack.add(new Block(new AssemblyStepLocationGenerator(mainSourceFile.getSourceLocations(initialArchitecture),
                 null, null, false), null));
+        this.currentEncoding = UTF_8;
         this.currentNamespace = null;
         ++this.currentPass;
-        this.currentEncoding = UTF_8;
 
         for (CustomAssemblyData customAssemblyData : this.customAssemblyData.values()) {
             customAssemblyData.startedNewPass();

@@ -2404,6 +2404,46 @@ public class AssemblyTest {
     }
 
     /**
+     * Asserts that the state specific to the current pass is reset when a new pass is started.
+     */
+    @Test
+    public void startNewPass() {
+        final TestSourceNode nodeThatDefinesTheLocalBarSymbol = createNodeThatDefinesASymbol("bar", true, SymbolType.CONSTANT,
+                FORTY_TWO);
+        final TestSourceNode nodeThatDefinesTheSuffixBazSymbol = createNodeThatDefinesASymbol(".baz", false, SymbolType.CONSTANT,
+                FORTY_TWO);
+        final TestSourceNode nodeThatReferencesTheFooSymbol = createNodeThatReferencesASymbol("foo");
+        final TestSourceNode nodeThatDefinesTheFooSymbol = createNodeThatDefinesASymbol("foo", SymbolType.CONSTANT, FORTY_TWO);
+        final SourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatDefinesTheLocalBarSymbol,
+                nodeThatDefinesTheSuffixBazSymbol, nodeThatReferencesTheFooSymbol, nodeThatDefinesTheFooSymbol));
+        final Assembly assembly = createAssembly(rootNode);
+
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.STARTED_NEW_PASS);
+
+        assertThat(assembly.getSteps(), is(empty()));
+        assertThat(assembly.getProgramCounter(), is(0L));
+        assertThat(assembly.getCurrentEncoding(), is(Charset.forName("UTF-8")));
+        assertThat(assembly.getCurrentNamespace(), is(nullValue()));
+        assertThat(assembly.getCurrentPass(), is(2));
+
+        // Check that the counters for anonymous symbols are reset.
+        assertThat(assembly.resolveSymbolReference(SymbolContext.VALUE, "+", false, false, null, null).getName(), is("__forw1"));
+        assertThat(assembly.resolveSymbolReference(SymbolContext.VALUE, "-", false, false, null, null).getName(), is("__back0"));
+
+        // Check that the scope key is reset.
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        assertThat(assembly.getScope(null), is(notNullValue()));
+
+        // Check that the last non-suffix symbol is reset.
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        assertThat(assembly.resolveSymbolReference(SymbolContext.VALUE, ".baz", false, false, null, null).getName(), is(".baz"));
+    }
+
+    /**
      * Asserts that {@link Assembly#step()} generates {@link AssemblyStep} objects correctly and that
      * {@link Assembly#writeAssembledDataTo(OutputStream)} writes the assembled data to the specified {@link OutputStream}
      * correctly.
