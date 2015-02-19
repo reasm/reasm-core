@@ -34,14 +34,14 @@ public class SourceNodeRangeReaderTest {
             assert reader != null;
 
             if (this.inParentheses) {
-                if (reader.getCurrentChar() == ')') {
+                if (reader.getCurrentCodePoint() == ')') {
                     this.inParentheses = false;
                 }
 
                 return true;
             }
 
-            if (reader.getCurrentChar() == '(') {
+            if (reader.getCurrentCodePoint() == '(') {
                 this.inParentheses = true;
                 return true;
             }
@@ -59,8 +59,7 @@ public class SourceNodeRangeReaderTest {
     private static final SourceLocation SOURCE_LOCATION = new SourceLocation(SOURCE_FILE, NULL_ARCHITECTURE, SOURCE_NODE, 5, 2, 1);
 
     /**
-     * Asserts that {@link SourceNodeRangeReader#getCurrentChar()} returns the character a the reader's current position,
-     * {@link SourceNodeRangeReader#getCurrentCodePoint()} returns the code point at the reader's current position,
+     * Asserts that {@link SourceNodeRangeReader#getCurrentCodePoint()} returns the code point at the reader's current position,
      * {@link SourceNodeRangeReader#getCurrentPosition()} returns the reader's current position (where the initial position is 0),
      * {@link SourceNodeRangeReader#getCurrentPositionInSourceNode()} returns the reader's position within the source node of the
      * source location the reader was constructed with, {@link SourceNodeRangeReader#atEnd()} returns <code>true</code> when the end
@@ -74,7 +73,6 @@ public class SourceNodeRangeReaderTest {
         int codePoint;
         for (int i = 5 + 2; i < 5 + 12; i += Character.charCount(codePoint)) {
             codePoint = TEXT.codePointAt(i);
-            assertThat(reader.getCurrentChar(), is(TEXT.charAt(i)));
             assertThat(reader.getCurrentCodePoint(), is(codePoint));
             assertThat(reader.getCurrentPosition(), is(i - (5 + 2)));
             assertThat(reader.getCurrentPositionInSourceNode(), is(i - 5));
@@ -86,17 +84,16 @@ public class SourceNodeRangeReaderTest {
     }
 
     /**
-     * Asserts that {@link SourceNodeRangeReader#getCurrentChar()}, {@link SourceNodeRangeReader#getCurrentCodePoint()},
-     * {@link SourceNodeRangeReader#getCurrentPosition()}, {@link SourceNodeRangeReader#getCurrentPositionInSourceNode()},
-     * {@link SourceNodeRangeReader#atEnd()} and {@link SourceNodeRangeReader#advance()} work correctly when the
-     * {@link SourceNodeRangeReader} has been constructed with a {@link SourceNodeRangeReader.SkipHandler}.
+     * Asserts that {@link SourceNodeRangeReader#getCurrentCodePoint()}, {@link SourceNodeRangeReader#getCurrentPosition()},
+     * {@link SourceNodeRangeReader#getCurrentPositionInSourceNode()}, {@link SourceNodeRangeReader#atEnd()} and
+     * {@link SourceNodeRangeReader#advance()} work correctly when the {@link SourceNodeRangeReader} has been constructed with a
+     * {@link SourceNodeRangeReader.SkipHandler}.
      */
     @Test
     public void advanceSkipHandler() {
         final SourceNodeRangeReader reader = new SourceNodeRangeReader(SOURCE_LOCATION, new SubstringBounds(2, 12),
                 new ParenthesesSkipHandler());
 
-        assertThat(reader.getCurrentChar(), is('c'));
         assertThat(reader.getCurrentPosition(), is(0));
         assertThat(reader.getCurrentPositionInSourceNode(), is(2));
         reader.advance();
@@ -104,7 +101,6 @@ public class SourceNodeRangeReaderTest {
         int codePoint;
         for (int i = 5 + 8; i < 5 + 12; i += Character.charCount(codePoint)) {
             codePoint = TEXT.codePointAt(i);
-            assertThat(reader.getCurrentChar(), is(TEXT.charAt(i)));
             assertThat(reader.getCurrentCodePoint(), is(codePoint));
             assertThat(reader.getCurrentPosition(), is(i - 7));
             assertThat(reader.getCurrentPositionInSourceNode(), is(i - 5));
@@ -222,7 +218,6 @@ public class SourceNodeRangeReaderTest {
     public void sourceNodeRangeReaderSourceLocationIntIntSkipHandlerStartTooSmall() {
         final SourceNodeRangeReader reader = new SourceNodeRangeReader(SOURCE_LOCATION, -1, 12, new ParenthesesSkipHandler());
         assertThat(reader.getSourceLocation(), is(sameInstance(SOURCE_LOCATION)));
-        assertThat(reader.getCurrentChar(), is('a'));
         assertThat(reader.getCurrentCodePoint(), is(0x61));
     }
 
@@ -275,22 +270,17 @@ public class SourceNodeRangeReaderTest {
     public void sourceNodeRangeReaderSourceNodeRangeReader() {
         final SourceNodeRangeReader reader = new SourceNodeRangeReader(SOURCE_LOCATION, new SubstringBounds(2, 12),
                 new ParenthesesSkipHandler());
-        assertThat(reader.getCurrentChar(), is('c'));
         assertThat(reader.getCurrentCodePoint(), is(0x63));
         reader.advance();
-        assertThat(reader.getCurrentChar(), is('g'));
         assertThat(reader.getCurrentCodePoint(), is(0x67));
         final SourceNodeRangeReader reader2 = new SourceNodeRangeReader(reader);
         assertThat(reader2.getSourceLocation(), is(sameInstance(SOURCE_LOCATION)));
-        assertThat(reader2.getCurrentChar(), is('g'));
         assertThat(reader2.getCurrentCodePoint(), is(0x67));
         reader2.advance();
-        assertThat(reader2.getCurrentChar(), is('\uD83C'));
         assertThat(reader2.getCurrentCodePoint(), is(0x1F341));
         reader2.advance();
-        assertThat(reader2.getCurrentChar(), is('h'));
         assertThat(reader2.getCurrentCodePoint(), is(0x68));
-        assertThat(reader.getCurrentChar(), is('g'));
+        assertThat(reader.getCurrentCodePoint(), is(0x67));
     }
 
     /**

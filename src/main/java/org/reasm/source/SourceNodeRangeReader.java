@@ -1,6 +1,5 @@
 package org.reasm.source;
 
-import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import javax.annotation.CheckForNull;
@@ -236,17 +235,6 @@ public final class SourceNodeRangeReader {
      */
     public final boolean atEnd() {
         return this.rangedReader.atEnd();
-    }
-
-    /**
-     * Gets the current character.
-     *
-     * @return the current character
-     * @throws NoSuchElementException
-     *             The end of the range has been reached.
-     */
-    public final char getCurrentChar() throws NoSuchElementException {
-        return this.rangedReader.getCurrentChar();
     }
 
     /**

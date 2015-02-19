@@ -59,8 +59,8 @@ public class HexArchitecture extends Architecture {
      */
     public static final HexArchitecture INSTANCE = new HexArchitecture();
 
-    private static boolean isHexDigit(char ch) {
-        return ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'F' || ch >= 'a' && ch <= 'f';
+    private static boolean isHexDigit(int codePoint) {
+        return codePoint >= '0' && codePoint <= '9' || codePoint >= 'A' && codePoint <= 'F' || codePoint >= 'a' && codePoint <= 'f';
     }
 
     @Nonnull
@@ -77,10 +77,10 @@ public class HexArchitecture extends Architecture {
                     });
                 }
 
-                char ch = reader.getCurrentChar();
-                if (!isHexDigit(ch)) {
-                    return new HexSourceNode(reader.getCurrentPosition() - start, new ParseError("Unexpected character: '" + ch
-                            + "'") {
+                int codePoint = reader.getCurrentCodePoint();
+                if (!isHexDigit(codePoint)) {
+                    return new HexSourceNode(reader.getCurrentPosition() - start, new ParseError(new StringBuilder(
+                            "Unexpected character: '").appendCodePoint(codePoint).append("'").toString()) {
                     });
                 }
             }

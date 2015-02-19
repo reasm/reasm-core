@@ -1042,8 +1042,8 @@ public class AssemblyTest {
                 final List<SourceNode> nodes = new ArrayList<>();
                 final DocumentReader reader = new DocumentReader(text);
                 while (!reader.atEnd()) {
-                    final char ch = reader.getCurrentChar();
-                    if (ch == 'i') {
+                    final int codePoint = reader.getCurrentCodePoint();
+                    if (codePoint == 'i') {
                         reader.advance();
                         nodes.add(new SourceNode(2, null) {
                             @Override
@@ -1056,7 +1056,7 @@ public class AssemblyTest {
                                 builder.enterFile(childFile, null);
                             }
                         });
-                    } else if (ch >= '0' && ch <= '9') {
+                    } else if (codePoint >= '0' && codePoint <= '9') {
                         nodes.add(new SourceNode(1, null) {
                             @Override
                             protected void assembleCore(AssemblyBuilder builder) throws IOException {

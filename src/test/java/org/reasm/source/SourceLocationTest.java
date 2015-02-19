@@ -107,8 +107,10 @@ public class SourceLocationTest extends ObjectHashCodeEqualsContract {
         final String text = "fghijklm";
         final SourceNodeRangeReader reader = SOURCE_LOCATION.getTextReader();
 
-        for (int i = 0; i < text.length(); i++) {
-            assertThat(reader.getCurrentChar(), is(text.charAt(i)));
+        int codePoint;
+        for (int i = 0; i < text.length(); i += Character.charCount(codePoint)) {
+            codePoint = text.codePointAt(i);
+            assertThat(reader.getCurrentCodePoint(), is(codePoint));
             reader.advance();
         }
 
