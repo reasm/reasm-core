@@ -15,14 +15,14 @@ import ca.fragag.Consumer;
  */
 public final class EvaluationContext {
 
-    /** A dummy evaluation context. */
-    public static final EvaluationContext DUMMY = new EvaluationContext(null, 0, null);
-
     private static final Consumer<AssemblyMessage> DUMMY_ASSEMBLY_MESSAGE_CONSUMER = new Consumer<AssemblyMessage>() {
         @Override
         public void accept(AssemblyMessage object) {
         }
     };
+
+    /** A dummy evaluation context. */
+    public static final EvaluationContext DUMMY = new EvaluationContext(null, 0, null);
 
     @CheckForNull
     private final Assembly assembly;
