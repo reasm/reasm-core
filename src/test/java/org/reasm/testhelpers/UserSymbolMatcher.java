@@ -2,6 +2,9 @@ package org.reasm.testhelpers;
 
 import java.util.Objects;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.reasm.SymbolContext;
@@ -18,9 +21,13 @@ import org.reasm.UserSymbol;
  */
 public class UserSymbolMatcher<TValue> extends TypeSafeDiagnosingMatcher<UserSymbol> {
 
+    @Nonnull
     private final SymbolContext<TValue> context;
+    @Nonnull
     private final String name;
+    @Nonnull
     private final SymbolType type;
+    @CheckForNull
     private final TValue value;
 
     /**
@@ -35,7 +42,8 @@ public class UserSymbolMatcher<TValue> extends TypeSafeDiagnosingMatcher<UserSym
      * @param value
      *            the symbol's expected value
      */
-    public UserSymbolMatcher(SymbolContext<TValue> context, String name, SymbolType type, TValue value) {
+    public UserSymbolMatcher(@Nonnull SymbolContext<TValue> context, @Nonnull String name, @Nonnull SymbolType type,
+            @CheckForNull TValue value) {
         this.context = context;
         this.name = name;
         this.type = type;

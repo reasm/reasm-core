@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.hamcrest.Matcher;
@@ -71,14 +72,19 @@ public class AssemblyTest {
         };
     }
 
-    private static void checkSymbol(String symbolName, SymbolType symbolType, Assembly assembly,
-            Collection<Matcher<? super UserSymbol>> symbols) {
+    private static void checkSymbol(@Nonnull String symbolName, @Nonnull SymbolType symbolType, @Nonnull Assembly assembly,
+            @Nonnull Collection<Matcher<? super UserSymbol>> symbols) {
+        checkSymbol(symbolName, symbolType, FORTY_TWO, assembly, symbols);
+    }
+
+    private static void checkSymbol(@Nonnull String symbolName, @Nonnull SymbolType symbolType, @CheckForNull Value symbolValue,
+            @Nonnull Assembly assembly, @Nonnull Collection<Matcher<? super UserSymbol>> symbols) {
         final SymbolReference symbolReference = assembly.resolveSymbolReference(SymbolContext.VALUE, symbolName, false, false,
                 null, null);
         final Symbol symbol = symbolReference.getSymbol();
         assertThat(symbol, is(notNullValue()));
         assertThat(symbol, is(instanceOf(UserSymbol.class)));
-        assertThat((UserSymbol) symbol, is(new UserSymbolMatcher<>(SymbolContext.VALUE, symbolName, symbolType, FORTY_TWO)));
+        assertThat((UserSymbol) symbol, is(new UserSymbolMatcher<>(SymbolContext.VALUE, symbolName, symbolType, symbolValue)));
         symbols.add(is(sameInstance(symbol)));
     }
 
@@ -426,6 +432,38 @@ public class AssemblyTest {
 
         assertThat(scope.getLocalSymbols(), contains(new UserSymbolMatcher<>(SymbolContext.VALUE, "bar", SymbolType.CONSTANT,
                 FORTY_TWO)));
+    }
+
+    /**
+     * Asserts that a symbol defined in a namespace with the same name as another symbol defined with the same name out of that
+     * namespace is defined as a distinct symbol.
+     */
+    @Test
+    public void defineShadowingSymbol() {
+        final TestSourceNode nodeThatDefinesTheOuterSymbol = createNodeThatDefinesASymbol("a", SymbolType.VARIABLE, ONE);
+        final TestSourceNode nodeThatEntersANamespace = createNodeThatEntersANamespace("n");
+        final TestSourceNode nodeThatDefinesTheInnerSymbol = createNodeThatDefinesASymbol("a", SymbolType.VARIABLE, TWO);
+        final TestSourceNode nodeThatExitsANamespace = createNodeThatExitsANamespace();
+        final SourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatDefinesTheOuterSymbol,
+                nodeThatEntersANamespace, nodeThatDefinesTheInnerSymbol, nodeThatExitsANamespace));
+        final Assembly assembly = createAssembly(rootNode);
+
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.COMPLETE);
+        assertThat(assembly.getGravity(), is(MessageGravity.NONE));
+        nodeThatDefinesTheOuterSymbol.assertAssembleCount(1);
+        nodeThatEntersANamespace.assertAssembleCount(1);
+        nodeThatDefinesTheInnerSymbol.assertAssembleCount(1);
+        nodeThatExitsANamespace.assertAssembleCount(1);
+
+        final Collection<Matcher<? super UserSymbol>> symbols = new ArrayList<>();
+        checkSymbol("a", SymbolType.VARIABLE, ONE, assembly, symbols);
+        checkSymbol("n.a", SymbolType.VARIABLE, TWO, assembly, symbols);
+
+        assertThat(assembly.getSymbols(), containsInAnyOrder(symbols));
     }
 
     /**
