@@ -549,7 +549,7 @@ public class AbstractSourceFileTest {
         sourceFile.getParsed(ArchitectureWithBrokenReparser.INSTANCE);
 
         try {
-            sourceFile = sourceFile.replaceText(1, 1, "1");
+            sourceFile.replaceText(1, 1, "1");
             fail("Expected a ContractViolationException to be thrown");
         } catch (ContractViolationException e) {
             assertThat(e.getMessage(), is("Contract violation: Architecture.reparse() must not return null."));
