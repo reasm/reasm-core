@@ -43,6 +43,13 @@ public final class Assembly {
 
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
+    private static final Function<Scope, Iterable<UserSymbol>> GET_LOCAL_SYMBOL_TABLE_FROM_SCOPE = new Function<Scope, Iterable<UserSymbol>>() {
+        @Override
+        public Iterable<UserSymbol> apply(Scope input) {
+            return input.getLocalSymbolTable();
+        }
+    };
+
     /**
      * Builds the fully qualified name of a symbol name in a namespace.
      *
@@ -196,12 +203,7 @@ public final class Assembly {
         }
 
         final Iterable<Iterable<UserSymbol>> localSymbols = Iterables.transform(this.scopeTable.values(),
-                new Function<Scope, Iterable<UserSymbol>>() {
-                    @Override
-                    public Iterable<UserSymbol> apply(Scope input) {
-                        return input.getLocalSymbolTable();
-                    }
-                });
+                GET_LOCAL_SYMBOL_TABLE_FROM_SCOPE);
         this.allSymbols = Iterables.concat(this.symbolTable, Iterables.concat(localSymbols));
 
         this.configuration = configuration;
