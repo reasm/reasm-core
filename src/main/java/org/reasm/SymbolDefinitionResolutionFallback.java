@@ -32,7 +32,7 @@ final class SymbolDefinitionResolutionFallback implements SymbolResolutionFallba
     @Nonnull
     @Override
     public UserSymbol resolve(@Nonnull SymbolReference symbolReference) {
-        final UserSymbol newSymbol = new UserSymbol(symbolReference.getContexts().get(0), symbolReference.getName(),
+        final UserSymbol newSymbol = new UserSymbol(symbolReference.getContexts().get(0), symbolReference.getDefinedName(),
                 this.symbolType);
         symbolReference.getAssembly().addSymbol(newSymbol, symbolReference.getScope());
         return newSymbol;

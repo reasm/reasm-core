@@ -58,7 +58,7 @@ public class SymbolLookupContextTest extends ObjectHashCodeEqualsContract {
         final TestSourceNode nodeThatEntersANamespace = new TestSourceNode() {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                final Object value = builder.resolveSymbolReference(SymbolContext.VALUE, "F", false, false, null, null).getValue();
+                final Object value = builder.resolveSymbolReference(SymbolContext.VALUE, "F", false, null, null).getValue();
                 if (value == null) {
                     builder.enterNamespace("N");
                 } else {
@@ -165,8 +165,8 @@ public class SymbolLookupContextTest extends ObjectHashCodeEqualsContract {
         return new TestSourceNode() {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                final Object value = builder.resolveSymbolReference(SymbolContext.VALUE, nameOfReferencedSymbol, false, false,
-                        null, null).getValue();
+                final Object value = builder.resolveSymbolReference(SymbolContext.VALUE, nameOfReferencedSymbol, false, null, null)
+                        .getValue();
 
                 if (value != null) {
                     assertThat(value, is(instanceOf(Value.class)));
@@ -183,8 +183,8 @@ public class SymbolLookupContextTest extends ObjectHashCodeEqualsContract {
         return new TestSourceNode() {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                final Object value = builder.resolveSymbolReference(SymbolContext.VALUE, nameOfReferencedSymbol, false, false,
-                        null, null).getValue();
+                final Object value = builder.resolveSymbolReference(SymbolContext.VALUE, nameOfReferencedSymbol, false, null, null)
+                        .getValue();
                 if (value != null) {
                     builder.defineSymbol(SymbolContext.VALUE, nameOfSymbolToDefine, false, SymbolType.CONSTANT, one);
                 }

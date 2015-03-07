@@ -10,14 +10,12 @@ import javax.annotation.Nonnull;
  * for a symbol reference.
  *
  * @author Francis Gagné
- * @see Assembly#resolveSymbolReference(List, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)
- * @see Assembly#resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)
- * @see Assembly#resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)
- * @see AssemblyBuilder#resolveSymbolReference(List, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)
- * @see AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolLookupContext,
- *      SymbolResolutionFallback)
- * @see AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolLookupContext,
- *      SymbolResolutionFallback)
+ * @see Assembly#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)
+ * @see Assembly#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)
+ * @see Assembly#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)
+ * @see AssemblyBuilder#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)
+ * @see AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)
+ * @see AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)
  * @see SymbolReference
  */
 public interface SymbolResolutionFallback {

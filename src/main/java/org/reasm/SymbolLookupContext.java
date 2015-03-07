@@ -13,14 +13,12 @@ import javax.annotation.Nonnull;
  *
  * @author Francis Gagné
  * @see Assembly#getCurrentSymbolLookupContext()
- * @see Assembly#resolveSymbolReference(List, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)
- * @see Assembly#resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)
- * @see Assembly#resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)
- * @see AssemblyBuilder#resolveSymbolReference(List, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)
- * @see AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolLookupContext,
- *      SymbolResolutionFallback)
- * @see AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolLookupContext,
- *      SymbolResolutionFallback)
+ * @see Assembly#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)
+ * @see Assembly#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)
+ * @see Assembly#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)
+ * @see AssemblyBuilder#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)
+ * @see AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)
+ * @see AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)
  */
 public final class SymbolLookupContext {
 
@@ -31,7 +29,7 @@ public final class SymbolLookupContext {
 
         for (int i = 0; i < contexts.size(); i++) {
             final UserSymbol symbol = symbolTable.getSymbol(contexts.get(i), name);
-            if (symbol != null && (symbol.exists(definitionRequired) || symbolReference.isDefinition())) {
+            if (symbol != null && (symbol.exists(definitionRequired) || symbolReference.getDefinedName() != null)) {
                 return symbol;
             }
         }
@@ -119,6 +117,15 @@ public final class SymbolLookupContext {
         return this.assembly;
     }
 
+    @Nonnull
+    final String getDefinedName(@Nonnull String name, boolean local, boolean isSuffixSymbol) {
+        if (local || isSuffixSymbol) {
+            return name;
+        }
+
+        return Assembly.buildNamespacedSymbolName(this.namespace, name);
+    }
+
     final Scope getScope() {
         return this.assembly.getScope(this.scopeKey);
     }
@@ -129,9 +136,25 @@ public final class SymbolLookupContext {
         final Scope scope = symbolReference.getScope();
         if (scope != null) {
             symbolTable = scope.getLocalSymbolTable();
-        } else if (!symbolReference.bypassNamespaceResolution()) {
+        }
+
+        final String symbolDefinedName = symbolReference.getDefinedName();
+        if (symbolDefinedName != null) {
+            // If the symbol reference is a definition,
+            // only look up existing symbols in the current namespace,
+            // not in parent namespaces.
+            final UserSymbol symbol = lookupSymbol(symbolReference, symbolTable, symbolDefinedName, definitionRequired);
+            if (symbol != null) {
+                return symbol;
+            }
+
+            return symbolReference.resolveFallbackSymbol();
+        }
+
+        final String symbolName = symbolReference.getName();
+        if (scope == null) {
             for (Namespace namespace = this.namespace; namespace != null; namespace = namespace.getParent()) {
-                final String namespacedSymbolName = Assembly.buildNamespacedSymbolName(namespace, symbolReference.getName());
+                final String namespacedSymbolName = Assembly.buildNamespacedSymbolName(namespace, symbolName);
                 final UserSymbol symbol = lookupSymbol(symbolReference, symbolTable, namespacedSymbolName, definitionRequired);
                 if (symbol != null) {
                     return symbol;
@@ -139,7 +162,7 @@ public final class SymbolLookupContext {
             }
         }
 
-        final UserSymbol symbol = lookupSymbol(symbolReference, symbolTable, symbolReference.getName(), definitionRequired);
+        final UserSymbol symbol = lookupSymbol(symbolReference, symbolTable, symbolName, definitionRequired);
         if (symbol != null) {
             return symbol;
         }

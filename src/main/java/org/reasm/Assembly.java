@@ -54,8 +54,11 @@ public final class Assembly {
      */
     @Nonnull
     static String buildNamespacedSymbolName(@CheckForNull Namespace namespace, @Nonnull String symbolName) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(symbolName);
+        if (namespace == null) { // optimization
+            return symbolName;
+        }
+
+        final StringBuilder sb = new StringBuilder(symbolName);
 
         for (; namespace != null; namespace = namespace.getParent()) {
             sb.insert(0, '.');
@@ -399,9 +402,9 @@ public final class Assembly {
      * Resolves a reference to a symbol.
      * <p>
      * This method must <strong>not</strong> be used to resolve symbol references that appear in the source of this assembly; use
-     * {@link AssemblyBuilder#resolveSymbolReference(List, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
-     * instead. This method may be used to access the symbols from this assembly without recording it so that it isn't considered
-     * when determining if a new pass is necessary.
+     * {@link AssemblyBuilder#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)} instead.
+     * This method may be used to access the symbols from this assembly without recording it so that it isn't considered when
+     * determining if a new pass is necessary.
      *
      * @param contexts
      *            a list of contexts of the symbol reference. The symbol will be looked up in each of these contexts in order, until
@@ -410,11 +413,6 @@ public final class Assembly {
      *            the name of the symbol to look up
      * @param local
      *            <code>true</code> to look up a local symbol; otherwise, <code>false</code>
-     * @param bypassNamespaceResolution
-     *            <code>true</code> to bypass namespace resolution, or <code>false</code> to perform namespace resolution. If the
-     *            assembly is currently in a namespace, the namespace's name will be prepended, followed by a '.', to the specified
-     *            symbol name, and this will be repeated for each parent namespace. Specify <code>true</code> if the symbol name is
-     *            already fully qualified.
      * @param lookupContext
      *            the context in which to perform the symbol lookups, or <code>null</code> to use the current context
      * @param symbolResolutionFallback
@@ -425,7 +423,7 @@ public final class Assembly {
      *         time the symbol reference was resolved
      */
     public final SymbolReference resolveSymbolReference(@Nonnull List<? extends SymbolContext<?>> contexts, @Nonnull String name,
-            boolean local, boolean bypassNamespaceResolution, @CheckForNull SymbolLookupContext lookupContext,
+            boolean local, @CheckForNull SymbolLookupContext lookupContext,
             @CheckForNull SymbolResolutionFallback symbolResolutionFallback) {
         if (contexts == null) {
             throw new NullPointerException("contexts");
@@ -435,15 +433,15 @@ public final class Assembly {
             throw new NullPointerException("name");
         }
 
-        return new SymbolReference(ImmutableList.copyOf(contexts), name, local, bypassNamespaceResolution, false,
-                this.checkLookupContext(lookupContext), null, symbolResolutionFallback);
+        return new SymbolReference(ImmutableList.copyOf(contexts), name, local, false, this.checkLookupContext(lookupContext),
+                null, symbolResolutionFallback);
     }
 
     /**
      * Resolves a reference to a symbol.
      * <p>
      * This method must <strong>not</strong> be used to resolve symbol references that appear in the source of this assembly; use
-     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
      * instead. This method may be used to access the symbols from this assembly without recording it so that it isn't considered
      * when determining if a new pass is necessary.
      *
@@ -453,11 +451,6 @@ public final class Assembly {
      *            the name of the symbol to look up
      * @param local
      *            <code>true</code> to look up a local symbol; otherwise, <code>false</code>
-     * @param bypassNamespaceResolution
-     *            <code>true</code> to bypass namespace resolution, or <code>false</code> to perform namespace resolution. If the
-     *            assembly is currently in a namespace, the namespace's name will be prepended, followed by a '.', to the specified
-     *            symbol name, and this will be repeated for each parent namespace. Specify <code>true</code> if the symbol name is
-     *            already fully qualified.
      * @param lookupContext
      *            the context in which to perform the symbol lookups, or <code>null</code> to use the current context
      * @param symbolResolutionFallback
@@ -468,8 +461,7 @@ public final class Assembly {
      *         time the symbol reference was resolved
      */
     public final SymbolReference resolveSymbolReference(@Nonnull SymbolContext<?> context, @Nonnull String name, boolean local,
-            boolean bypassNamespaceResolution, @CheckForNull SymbolLookupContext lookupContext,
-            @CheckForNull SymbolResolutionFallback symbolResolutionFallback) {
+            @CheckForNull SymbolLookupContext lookupContext, @CheckForNull SymbolResolutionFallback symbolResolutionFallback) {
         if (context == null) {
             throw new NullPointerException("context");
         }
@@ -478,7 +470,7 @@ public final class Assembly {
             throw new NullPointerException("name");
         }
 
-        return new SymbolReference(SymbolReference.cachedContextSingleton(context), name, local, bypassNamespaceResolution, false,
+        return new SymbolReference(SymbolReference.cachedContextSingleton(context), name, local, false,
                 this.checkLookupContext(lookupContext), null, symbolResolutionFallback);
     }
 
@@ -486,7 +478,7 @@ public final class Assembly {
      * Resolves a reference to a symbol.
      * <p>
      * This method must <strong>not</strong> be used to resolve symbol references that appear in the source of this assembly; use
-     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
      * instead. This method may be used to access the symbols from this assembly without recording it so that it isn't considered
      * when determining if a new pass is necessary.
      *
@@ -497,11 +489,6 @@ public final class Assembly {
      *            the name of the symbol to look up
      * @param local
      *            <code>true</code> to look up a local symbol; otherwise, <code>false</code>
-     * @param bypassNamespaceResolution
-     *            <code>true</code> to bypass namespace resolution, or <code>false</code> to perform namespace resolution. If the
-     *            assembly is currently in a namespace, the namespace's name will be prepended, followed by a '.', to the specified
-     *            symbol name, and this will be repeated for each parent namespace. Specify <code>true</code> if the symbol name is
-     *            already fully qualified.
      * @param lookupContext
      *            the context in which to perform the symbol lookups, or <code>null</code> to use the current context
      * @param symbolResolutionFallback
@@ -512,8 +499,7 @@ public final class Assembly {
      *         time the symbol reference was resolved
      */
     public final SymbolReference resolveSymbolReference(@Nonnull SymbolContext<?>[] contexts, @Nonnull String name, boolean local,
-            boolean bypassNamespaceResolution, @CheckForNull SymbolLookupContext lookupContext,
-            @CheckForNull SymbolResolutionFallback symbolResolutionFallback) {
+            @CheckForNull SymbolLookupContext lookupContext, @CheckForNull SymbolResolutionFallback symbolResolutionFallback) {
         if (contexts == null) {
             throw new NullPointerException("contexts");
         }
@@ -522,8 +508,8 @@ public final class Assembly {
             throw new NullPointerException("name");
         }
 
-        return new SymbolReference(ImmutableList.copyOf(contexts), name, local, bypassNamespaceResolution, false,
-                this.checkLookupContext(lookupContext), null, symbolResolutionFallback);
+        return new SymbolReference(ImmutableList.copyOf(contexts), name, local, false, this.checkLookupContext(lookupContext),
+                null, symbolResolutionFallback);
     }
 
     /**
@@ -762,13 +748,7 @@ public final class Assembly {
             // The name is illegal, because it's impossible to reference it.
             this.addMessage(new IllegalSymbolNameErrorMessage(symbolName), definition);
         } else {
-            // If the symbol isn't a local symbol and we are in a namespace, prepend the namespace prefix.
-            String finalSymbolName = symbolName;
-            if (this.currentNamespace != null && !isLocalSymbol) {
-                finalSymbolName = buildNamespacedSymbolName(this.currentNamespace, symbolName);
-            }
-
-            this.defineSymbolFinal(context, finalSymbolName, isLocalSymbol, definition, symbolType, value);
+            this.defineSymbolFinal(context, symbolName, isLocalSymbol, definition, symbolType, value);
         }
     }
 
@@ -987,7 +967,7 @@ public final class Assembly {
      *
      * @param context
      *            the context in which the symbol is defined
-     * @param finalSymbolName
+     * @param symbolName
      *            the name of the symbol
      * @param isLocalSymbol
      *            <code>true</code> if the symbol is a local symbol; otherwise, <code>false</code>
@@ -998,11 +978,11 @@ public final class Assembly {
      * @param value
      *            the value of the symbol
      */
-    private final <TValue> void defineSymbolFinal(@Nonnull SymbolContext<TValue> context, @Nonnull String finalSymbolName,
+    private final <TValue> void defineSymbolFinal(@Nonnull SymbolContext<TValue> context, @Nonnull String symbolName,
             boolean isLocalSymbol, @Nonnull AssemblyStep definition, @Nonnull SymbolType symbolType, @CheckForNull TValue value) {
         // Try to find an existing symbol with that name, or fall back to creating the symbol.
-        final SymbolReference symbolReference = new SymbolReference(SymbolReference.cachedContextSingleton(context),
-                finalSymbolName, isLocalSymbol, true, true, this.getCurrentSymbolLookupContext(), definition,
+        final SymbolReference symbolReference = new SymbolReference(SymbolReference.cachedContextSingleton(context), symbolName,
+                isLocalSymbol, true, this.getCurrentSymbolLookupContext(), definition,
                 SymbolDefinitionResolutionFallback.getInstance(symbolType));
         this.addSymbolReference(symbolReference);
         final UserSymbol symbol = (UserSymbol) symbolReference.getSymbol();
@@ -1016,7 +996,7 @@ public final class Assembly {
         if (!isLocalSymbol) {
             this.currentScopeKey = definition.getLocation();
 
-            if (!Assembly.isSuffixSymbolName(finalSymbolName)) {
+            if (!Assembly.isSuffixSymbolName(symbolName)) {
                 this.lastNonSuffixSymbol = symbol;
             }
         }

@@ -79,8 +79,7 @@ public class AssemblyTest {
 
     private static void checkSymbol(@Nonnull String symbolName, @Nonnull SymbolType symbolType, @CheckForNull Value symbolValue,
             @Nonnull Assembly assembly, @Nonnull Collection<Matcher<? super UserSymbol>> symbols) {
-        final SymbolReference symbolReference = assembly.resolveSymbolReference(SymbolContext.VALUE, symbolName, false, false,
-                null, null);
+        final SymbolReference symbolReference = assembly.resolveSymbolReference(SymbolContext.VALUE, symbolName, false, null, null);
         final Symbol symbol = symbolReference.getSymbol();
         assertThat(symbol, is(notNullValue()));
         assertThat(symbol, is(instanceOf(UserSymbol.class)));
@@ -128,7 +127,7 @@ public class AssemblyTest {
         return new TestSourceNode() {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                builder.resolveSymbolReference(SymbolContext.VALUE, identifier, false, false, null, null);
+                builder.resolveSymbolReference(SymbolContext.VALUE, identifier, false, null, null);
             }
         };
     }
@@ -139,7 +138,7 @@ public class AssemblyTest {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
                 final SymbolReference symbolReference = builder.resolveSymbolReference(SymbolContext.VALUE, identifier, false,
-                        false, null, null);
+                        null, null);
                 assertThat(symbolReference.isLocal(), is(false));
                 final Symbol symbol = symbolReference.getSymbol();
                 assertThat(symbol, is(notNullValue()));
@@ -155,7 +154,7 @@ public class AssemblyTest {
         return new TestSourceNode() {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                final Symbol symbol = builder.resolveSymbolReference(SymbolContext.VALUE, identifier, false, false, null, null)
+                final Symbol symbol = builder.resolveSymbolReference(SymbolContext.VALUE, identifier, false, null, null)
                         .getSymbol();
                 if (builder.getAssembly().getCurrentPass() == 1) {
                     assertThat(symbol, is(nullValue()));
@@ -173,7 +172,7 @@ public class AssemblyTest {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
                 final SymbolReference symbolReference = builder.resolveSymbolReference(SymbolContext.VALUE, identifier, false,
-                        false, null, null);
+                        null, null);
                 assertThat(symbolReference.isLocal(), is(false));
                 assertThat(symbolReference.getSymbol(), is(nullValue()));
                 assertThat(symbolReference.getValue(), is(nullValue()));
@@ -223,7 +222,7 @@ public class AssemblyTest {
         step(assembly, AssemblyCompletionStatus.PENDING);
         step(assembly, AssemblyCompletionStatus.COMPLETE);
 
-        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, null, null).getSymbol();
+        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, null, null).getSymbol();
         assertThat(fooSymbol, is(notNullValue()));
         assertThat(fooSymbol, is(instanceOf(UserSymbol.class)));
         final UserSymbol fooUserSymbol = (UserSymbol) fooSymbol;
@@ -394,7 +393,7 @@ public class AssemblyTest {
         assertThat(scope.getLocalSymbols(), contains(new UserSymbolMatcher<>(SymbolContext.VALUE, "l", SymbolType.CONSTANT,
                 FORTY_TWO)));
 
-        final SymbolReference symbolReference = assembly.resolveSymbolReference(SymbolContext.VALUE, "l", true, false, null, null);
+        final SymbolReference symbolReference = assembly.resolveSymbolReference(SymbolContext.VALUE, "l", true, null, null);
         final Symbol symbol = symbolReference.getSymbol();
         assertThat(symbol, is(notNullValue()));
         assertThat(symbol, is(instanceOf(UserSymbol.class)));
@@ -421,7 +420,7 @@ public class AssemblyTest {
         nodeThatDefinesTheFooSymbol.assertAssembleCount(1);
         nodeThatDefinesTheBarSymbol.assertAssembleCount(1);
 
-        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, null, null).getSymbol();
+        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, null, null).getSymbol();
         assertThat(assembly.getSymbols(), contains(fooSymbol));
 
         final AssemblyStepLocation assemblyStepLocation = assembly.getSteps().get(1).getLocation();
@@ -500,6 +499,39 @@ public class AssemblyTest {
     @Test
     public void defineSuffixSymbolBeforeNonSuffixSymbol() {
         defineSymbol(".foo", ".foo");
+    }
+
+    /**
+     * Asserts that a suffix symbol defined in a namespace has its name built correctly.
+     */
+    @Test
+    public void defineSuffixSymbolInNamespace() {
+        final TestSourceNode nodeThatEntersANamespace = createNodeThatEntersANamespace("n");
+        final TestSourceNode nodeThatDefinesTheFooSymbol = createNodeThatDefinesASymbol("foo", false, SymbolType.CONSTANT,
+                FORTY_TWO);
+        final TestSourceNode nodeThatDefinesTheBarSymbol = createNodeThatDefinesASymbol(".bar", false, SymbolType.CONSTANT,
+                FORTY_TWO);
+        final TestSourceNode nodeThatExitsANamespace = createNodeThatExitsANamespace();
+        final SourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatEntersANamespace,
+                nodeThatDefinesTheFooSymbol, nodeThatDefinesTheBarSymbol, nodeThatExitsANamespace));
+        final Assembly assembly = createAssembly(rootNode);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.COMPLETE);
+        assertThat(assembly.getGravity(), is(MessageGravity.NONE));
+        nodeThatEntersANamespace.assertAssembleCount(1);
+        nodeThatDefinesTheFooSymbol.assertAssembleCount(1);
+        nodeThatDefinesTheBarSymbol.assertAssembleCount(1);
+        nodeThatExitsANamespace.assertAssembleCount(1);
+
+        final Collection<Matcher<? super UserSymbol>> symbols = new ArrayList<>();
+
+        checkSymbol("n.foo", SymbolType.CONSTANT, assembly, symbols);
+        checkSymbol("n.foo.bar", SymbolType.CONSTANT, assembly, symbols);
+
+        assertThat(assembly.getSymbols(), containsInAnyOrder(symbols));
     }
 
     /**
@@ -1601,8 +1633,7 @@ public class AssemblyTest {
         assertThat(namespace.getParent(), is(nullValue()));
         assertThat(namespace.getInnerNamespaces(), is(IsEmptyMap.empty()));
 
-        final Symbol fooBarSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo.bar", false, false, null, null)
-                .getSymbol();
+        final Symbol fooBarSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo.bar", false, null, null).getSymbol();
         assertThat(fooBarSymbol, is(nullValue()));
 
         final Scope scope = assembly.getScopes().get(null);
@@ -1812,7 +1843,7 @@ public class AssemblyTest {
         step(assembly, AssemblyCompletionStatus.COMPLETE);
         assertThat(assembly.getGravity(), is(MessageGravity.NONE));
 
-        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, null, null).getSymbol();
+        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, null, null).getSymbol();
         assertThat(fooSymbol, is(notNullValue()));
         assertThat(fooSymbol, is(instanceOf(UserSymbol.class)));
         final UserSymbol fooUserSymbol = (UserSymbol) fooSymbol;
@@ -1896,7 +1927,7 @@ public class AssemblyTest {
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
                 {
                     final SymbolContext<?>[] contexts = new SymbolContext<?>[] { DUMMY_SYMBOL_CONTEXT, SymbolContext.VALUE };
-                    final Symbol symbol = builder.resolveSymbolReference(contexts, "foo", false, false, null, null).getSymbol();
+                    final Symbol symbol = builder.resolveSymbolReference(contexts, "foo", false, null, null).getSymbol();
                     assertThat(symbol, is(notNullValue()));
                     assertThat(symbol, is(instanceOf(UserSymbol.class)));
                     assertThat((UserSymbol) symbol, new UserSymbolMatcher<>(DUMMY_SYMBOL_CONTEXT, "foo", SymbolType.CONSTANT,
@@ -1905,7 +1936,7 @@ public class AssemblyTest {
 
                 {
                     final SymbolContext<?>[] contexts = new SymbolContext<?>[] { SymbolContext.VALUE, DUMMY_SYMBOL_CONTEXT };
-                    final Symbol symbol = builder.resolveSymbolReference(contexts, "foo", false, false, null, null).getSymbol();
+                    final Symbol symbol = builder.resolveSymbolReference(contexts, "foo", false, null, null).getSymbol();
                     assertThat(symbol, is(notNullValue()));
                     assertThat(symbol, is(instanceOf(UserSymbol.class)));
                     assertThat((UserSymbol) symbol, new UserSymbolMatcher<>(SymbolContext.VALUE, "foo", SymbolType.CONSTANT,
@@ -2042,8 +2073,7 @@ public class AssemblyTest {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
                 if (builder.getAssembly().getCurrentPass() >= 2) {
-                    final Symbol symbol = builder.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, null, null)
-                            .getSymbol();
+                    final Symbol symbol = builder.resolveSymbolReference(SymbolContext.VALUE, "foo", false, null, null).getSymbol();
                     assertThat(symbol, is(nullValue()));
                 }
             }
@@ -2112,7 +2142,7 @@ public class AssemblyTest {
 
     /**
      * Asserts that
-     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
      * correctly resolves a symbol reference when a {@link SymbolLookupContext} is specified.
      */
     @Test
@@ -2137,7 +2167,7 @@ public class AssemblyTest {
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
                 final SymbolLookupContext lookupContext = lookupContextRef.get();
                 assertThat(lookupContext, is(not(nullValue())));
-                final Symbol symbol = builder.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, lookupContext, null)
+                final Symbol symbol = builder.resolveSymbolReference(SymbolContext.VALUE, "foo", false, lookupContext, null)
                         .getSymbol();
                 assertThat(symbol, is(not(nullValue())));
                 assertThat(symbol, is(instanceOf(UserSymbol.class)));
@@ -2166,8 +2196,8 @@ public class AssemblyTest {
 
     /**
      * Asserts that
-     * {@link Assembly#resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
-     * throws an {@link IllegalArgumentException} when the specified {@link SymbolLookupContext} belongs to a different assembly.
+     * {@link Assembly#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)} throws
+     * an {@link IllegalArgumentException} when the specified {@link SymbolLookupContext} belongs to a different assembly.
      */
     @Test
     public void resolveSymbolReferenceInForeignLookupContext() {
@@ -2176,7 +2206,7 @@ public class AssemblyTest {
         final SymbolLookupContext lookupContext = assembly0.getCurrentSymbolLookupContext();
 
         try {
-            assembly1.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, lookupContext, null);
+            assembly1.resolveSymbolReference(SymbolContext.VALUE, "foo", false, lookupContext, null);
         } catch (IllegalArgumentException e) {
             return;
         }
@@ -2185,36 +2215,33 @@ public class AssemblyTest {
     }
 
     /**
-     * Asserts that
-     * {@link Assembly#resolveSymbolReference(List, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)} throws
-     * a {@link NullPointerException} when the <code>contexts</code> argument contains a <code>null</code> element.
+     * Asserts that {@link Assembly#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * throws a {@link NullPointerException} when the <code>contexts</code> argument contains a <code>null</code> element.
      */
     @Test(expected = NullPointerException.class)
     public void resolveSymbolReferenceListStringBooleanBooleanSymbolResolutionFallbackNullContext() {
         final Assembly assembly = new Assembly(new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT));
-        assembly.resolveSymbolReference(Arrays.asList((SymbolContext<?>) null), "foo", false, false, null, null);
+        assembly.resolveSymbolReference(Arrays.asList((SymbolContext<?>) null), "foo", false, null, null);
     }
 
     /**
-     * Asserts that
-     * {@link Assembly#resolveSymbolReference(List, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)} throws
-     * a {@link NullPointerException} when the <code>contexts</code> argument is <code>null</code>.
+     * Asserts that {@link Assembly#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * throws a {@link NullPointerException} when the <code>contexts</code> argument is <code>null</code>.
      */
     @Test(expected = NullPointerException.class)
     public void resolveSymbolReferenceListStringBooleanBooleanSymbolResolutionFallbackNullContexts() {
         final Assembly assembly = new Assembly(new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT));
-        assembly.resolveSymbolReference((List<? extends SymbolContext<?>>) null, "foo", false, false, null, null);
+        assembly.resolveSymbolReference((List<? extends SymbolContext<?>>) null, "foo", false, null, null);
     }
 
     /**
-     * Asserts that
-     * {@link Assembly#resolveSymbolReference(List, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)} throws
-     * a {@link NullPointerException} when the <code>name</code> argument is <code>null</code>.
+     * Asserts that {@link Assembly#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * throws a {@link NullPointerException} when the <code>name</code> argument is <code>null</code>.
      */
     @Test(expected = NullPointerException.class)
     public void resolveSymbolReferenceListStringBooleanBooleanSymbolResolutionFallbackNullName() {
         final Assembly assembly = new Assembly(new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT));
-        assembly.resolveSymbolReference(ImmutableList.of(SymbolContext.VALUE), null, false, false, null, null);
+        assembly.resolveSymbolReference(ImmutableList.of(SymbolContext.VALUE), null, false, null, null);
     }
 
     /**
@@ -2228,7 +2255,7 @@ public class AssemblyTest {
         assertThat(assembly.getGravity(), is(MessageGravity.NONE));
 
         final SymbolContext<?>[] contexts = new SymbolContext<?>[] { DUMMY_SYMBOL_CONTEXT, SymbolContext.VALUE };
-        final Symbol symbol = assembly.resolveSymbolReference(contexts, "foo", false, false, null, null).getSymbol();
+        final Symbol symbol = assembly.resolveSymbolReference(contexts, "foo", false, null, null).getSymbol();
         assertThat(symbol, is(notNullValue()));
         assertThat(symbol, is(instanceOf(UserSymbol.class)));
         assertThat((UserSymbol) symbol, new UserSymbolMatcher<>(SymbolContext.VALUE, "foo", SymbolType.CONSTANT, FORTY_TWO));
@@ -2245,7 +2272,7 @@ public class AssemblyTest {
         assertThat(assembly.getGravity(), is(MessageGravity.NONE));
 
         final List<SymbolContext<?>> contexts = ImmutableList.of(DUMMY_SYMBOL_CONTEXT, SymbolContext.VALUE);
-        final Symbol symbol = assembly.resolveSymbolReference(contexts, "foo", false, false, null, null).getSymbol();
+        final Symbol symbol = assembly.resolveSymbolReference(contexts, "foo", false, null, null).getSymbol();
         assertThat(symbol, is(notNullValue()));
         assertThat(symbol, is(instanceOf(UserSymbol.class)));
         assertThat((UserSymbol) symbol, new UserSymbolMatcher<>(SymbolContext.VALUE, "foo", SymbolType.CONSTANT, FORTY_TWO));
@@ -2262,7 +2289,7 @@ public class AssemblyTest {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
                 final SymbolContext<?>[] contexts = new SymbolContext<?>[] { DUMMY_SYMBOL_CONTEXT, SymbolContext.VALUE };
-                final Symbol symbol = builder.resolveSymbolReference(contexts, "foo", false, false, null, null).getSymbol();
+                final Symbol symbol = builder.resolveSymbolReference(contexts, "foo", false, null, null).getSymbol();
                 assertThat(symbol, is(notNullValue()));
                 assertThat(symbol, is(instanceOf(UserSymbol.class)));
                 assertThat((UserSymbol) symbol, new UserSymbolMatcher<>(SymbolContext.VALUE, "foo", SymbolType.CONSTANT, FORTY_TWO));
@@ -2289,7 +2316,7 @@ public class AssemblyTest {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
                 final List<SymbolContext<?>> contexts = ImmutableList.of(DUMMY_SYMBOL_CONTEXT, SymbolContext.VALUE);
-                final Symbol symbol = builder.resolveSymbolReference(contexts, "foo", false, false, null, null).getSymbol();
+                final Symbol symbol = builder.resolveSymbolReference(contexts, "foo", false, null, null).getSymbol();
                 assertThat(symbol, is(notNullValue()));
                 assertThat(symbol, is(instanceOf(UserSymbol.class)));
                 assertThat((UserSymbol) symbol, new UserSymbolMatcher<>(SymbolContext.VALUE, "foo", SymbolType.CONSTANT, FORTY_TWO));
@@ -2307,57 +2334,57 @@ public class AssemblyTest {
 
     /**
      * Asserts that
-     * {@link Assembly#resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * {@link Assembly#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
      * throws a {@link NullPointerException} when the <code>contexts</code> argument contains a <code>null</code> element.
      */
     @Test(expected = NullPointerException.class)
     public void resolveSymbolReferenceSymbolContextArrayStringBooleanBooleanSymbolResolutionFallbackNullContext() {
         final Assembly assembly = new Assembly(new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT));
-        assembly.resolveSymbolReference(new SymbolContext<?>[] { null }, "foo", false, false, null, null);
+        assembly.resolveSymbolReference(new SymbolContext<?>[] { null }, "foo", false, null, null);
     }
 
     /**
      * Asserts that
-     * {@link Assembly#resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * {@link Assembly#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
      * throws a {@link NullPointerException} when the <code>contexts</code> argument is <code>null</code>.
      */
     @Test(expected = NullPointerException.class)
     public void resolveSymbolReferenceSymbolContextArrayStringBooleanBooleanSymbolResolutionFallbackNullContexts() {
         final Assembly assembly = new Assembly(new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT));
-        assembly.resolveSymbolReference((SymbolContext<?>[]) null, "foo", false, false, null, null);
+        assembly.resolveSymbolReference((SymbolContext<?>[]) null, "foo", false, null, null);
     }
 
     /**
      * Asserts that
-     * {@link Assembly#resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * {@link Assembly#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
      * throws a {@link NullPointerException} when the <code>name</code> argument is <code>null</code>.
      */
     @Test(expected = NullPointerException.class)
     public void resolveSymbolReferenceSymbolContextArrayStringBooleanBooleanSymbolResolutionFallbackNullName() {
         final Assembly assembly = new Assembly(new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT));
-        assembly.resolveSymbolReference(new SymbolContext<?>[] { SymbolContext.VALUE }, null, false, false, null, null);
+        assembly.resolveSymbolReference(new SymbolContext<?>[] { SymbolContext.VALUE }, null, false, null, null);
     }
 
     /**
      * Asserts that
-     * {@link Assembly#resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
-     * throws a {@link NullPointerException} when the <code>context</code> argument is <code>null</code>.
+     * {@link Assembly#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)} throws
+     * a {@link NullPointerException} when the <code>context</code> argument is <code>null</code>.
      */
     @Test(expected = NullPointerException.class)
     public void resolveSymbolReferenceSymbolContextStringBooleanBooleanSymbolResolutionFallbackNullContext() {
         final Assembly assembly = new Assembly(new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT));
-        assembly.resolveSymbolReference((SymbolContext<?>) null, "foo", false, false, null, null);
+        assembly.resolveSymbolReference((SymbolContext<?>) null, "foo", false, null, null);
     }
 
     /**
      * Asserts that
-     * {@link Assembly#resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
-     * throws a {@link NullPointerException} when the <code>name</code> argument is <code>null</code>.
+     * {@link Assembly#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)} throws
+     * a {@link NullPointerException} when the <code>name</code> argument is <code>null</code>.
      */
     @Test(expected = NullPointerException.class)
     public void resolveSymbolReferenceSymbolContextStringBooleanBooleanSymbolResolutionFallbackNullName() {
         final Assembly assembly = new Assembly(new Configuration(Environment.DEFAULT, EMPTY_SOURCE_FILE, NullArchitecture.DEFAULT));
-        assembly.resolveSymbolReference(SymbolContext.VALUE, null, false, false, null, null);
+        assembly.resolveSymbolReference(SymbolContext.VALUE, null, false, null, null);
     }
 
     /**
@@ -2469,8 +2496,8 @@ public class AssemblyTest {
         assertThat(assembly.getCurrentPass(), is(2));
 
         // Check that the counters for anonymous symbols are reset.
-        assertThat(assembly.resolveSymbolReference(SymbolContext.VALUE, "+", false, false, null, null).getName(), is("__forw1"));
-        assertThat(assembly.resolveSymbolReference(SymbolContext.VALUE, "-", false, false, null, null).getName(), is("__back0"));
+        assertThat(assembly.resolveSymbolReference(SymbolContext.VALUE, "+", false, null, null).getName(), is("__forw1"));
+        assertThat(assembly.resolveSymbolReference(SymbolContext.VALUE, "-", false, null, null).getName(), is("__back0"));
 
         // Check that the scope key is reset.
         step(assembly, AssemblyCompletionStatus.PENDING);
@@ -2478,7 +2505,7 @@ public class AssemblyTest {
 
         // Check that the last non-suffix symbol is reset.
         step(assembly, AssemblyCompletionStatus.PENDING);
-        assertThat(assembly.resolveSymbolReference(SymbolContext.VALUE, ".baz", false, false, null, null).getName(), is(".baz"));
+        assertThat(assembly.resolveSymbolReference(SymbolContext.VALUE, ".baz", false, null, null).getName(), is(".baz"));
     }
 
     /**
@@ -2707,8 +2734,7 @@ public class AssemblyTest {
         assertThat(namespace.getParent(), is(nullValue()));
         assertThat(namespace.getInnerNamespaces(), is(IsEmptyMap.empty()));
 
-        final Symbol barSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo.bar", false, false, null, null)
-                .getSymbol();
+        final Symbol barSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo.bar", false, null, null).getSymbol();
         assertThat(barSymbol, is(notNullValue()));
         assertThat(barSymbol, is(instanceOf(UserSymbol.class)));
         assertThat(barSymbol.getName(), is("foo.bar"));
@@ -2760,8 +2786,7 @@ public class AssemblyTest {
         assertThat(innerNamespace.getName(), is("bar"));
         assertThat(innerNamespace.getParent(), is(namespace));
 
-        final Symbol bazSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo.bar.baz", false, false, null, null)
-                .getSymbol();
+        final Symbol bazSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo.bar.baz", false, null, null).getSymbol();
         assertThat(bazSymbol, is(notNullValue()));
         assertThat(bazSymbol, is(instanceOf(UserSymbol.class)));
         assertThat(bazSymbol.getName(), is("foo.bar.baz"));
@@ -2785,8 +2810,7 @@ public class AssemblyTest {
         final TestSourceNode nodeThatReferencesTheBarSymbol = new TestSourceNode() {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                final Symbol barSymbol = builder.resolveSymbolReference(SymbolContext.VALUE, "bar", false, false, null, null)
-                        .getSymbol();
+                final Symbol barSymbol = builder.resolveSymbolReference(SymbolContext.VALUE, "bar", false, null, null).getSymbol();
                 assertThat(barSymbol, is(notNullValue()));
                 assertThat(barSymbol, is(instanceOf(UserSymbol.class)));
 
@@ -2840,11 +2864,10 @@ public class AssemblyTest {
         assertThat(namespace.getParent(), is(nullValue()));
         assertThat(namespace.getInnerNamespaces(), is(IsEmptyMap.empty()));
 
-        final Symbol barSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "bar", false, false, null, null).getSymbol();
+        final Symbol barSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "bar", false, null, null).getSymbol();
         assertThat(barSymbol, is(sameInstance(barSymbolRef.get())));
 
-        final Symbol fooBarSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo.bar", false, false, null, null)
-                .getSymbol();
+        final Symbol fooBarSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo.bar", false, null, null).getSymbol();
         assertThat(fooBarSymbol, is(sameInstance(fooBarSymbolRef.get())));
 
         assertThat(assembly.getSymbols(), containsInAnyOrder(barSymbol, fooBarSymbol));
@@ -2870,34 +2893,31 @@ public class AssemblyTest {
         final TestSourceNode nodeThatReferencesTheSymbols = new TestSourceNode() {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
-                final Symbol aSymbol = builder.resolveSymbolReference(SymbolContext.VALUE, "a", false, false, null, null)
-                        .getSymbol();
+                final Symbol aSymbol = builder.resolveSymbolReference(SymbolContext.VALUE, "a", false, null, null).getSymbol();
                 assertThat(aSymbol, is(notNullValue()));
                 assertThat(aSymbol, is(instanceOf(UserSymbol.class)));
                 assertThat((UserSymbol) aSymbol, new UserSymbolMatcher<>(SymbolContext.VALUE, "a", SymbolType.CONSTANT, ONE));
 
-                final Symbol bSymbol = builder.resolveSymbolReference(SymbolContext.VALUE, "b", false, false, null, null)
-                        .getSymbol();
+                final Symbol bSymbol = builder.resolveSymbolReference(SymbolContext.VALUE, "b", false, null, null).getSymbol();
                 assertThat(bSymbol, is(notNullValue()));
                 assertThat(bSymbol, is(instanceOf(UserSymbol.class)));
                 assertThat((UserSymbol) bSymbol, new UserSymbolMatcher<>(SymbolContext.VALUE, "X.b", SymbolType.CONSTANT, TWO));
 
-                final Symbol bSymbolQualified = builder
-                        .resolveSymbolReference(SymbolContext.VALUE, "X.b", false, false, null, null).getSymbol();
+                final Symbol bSymbolQualified = builder.resolveSymbolReference(SymbolContext.VALUE, "X.b", false, null, null)
+                        .getSymbol();
                 assertThat(bSymbolQualified, is(sameInstance(bSymbol)));
 
-                final Symbol cSymbol = builder.resolveSymbolReference(SymbolContext.VALUE, "c", false, false, null, null)
-                        .getSymbol();
+                final Symbol cSymbol = builder.resolveSymbolReference(SymbolContext.VALUE, "c", false, null, null).getSymbol();
                 assertThat(cSymbol, is(notNullValue()));
                 assertThat(cSymbol, is(instanceOf(UserSymbol.class)));
                 assertThat((UserSymbol) cSymbol, new UserSymbolMatcher<>(SymbolContext.VALUE, "X.Y.c", SymbolType.CONSTANT, THREE));
 
-                final Symbol cSymbolPartiallyQualified = builder.resolveSymbolReference(SymbolContext.VALUE, "Y.c", false, false,
-                        null, null).getSymbol();
+                final Symbol cSymbolPartiallyQualified = builder.resolveSymbolReference(SymbolContext.VALUE, "Y.c", false, null,
+                        null).getSymbol();
                 assertThat(cSymbolPartiallyQualified, is(sameInstance(cSymbol)));
 
-                final Symbol cSymbolFullyQualified = builder.resolveSymbolReference(SymbolContext.VALUE, "X.Y.c", false, false,
-                        null, null).getSymbol();
+                final Symbol cSymbolFullyQualified = builder
+                        .resolveSymbolReference(SymbolContext.VALUE, "X.Y.c", false, null, null).getSymbol();
                 assertThat(cSymbolFullyQualified, is(sameInstance(cSymbol)));
 
                 aSymbolRef.set(aSymbol);
@@ -2952,13 +2972,13 @@ public class AssemblyTest {
         assertThat(innerNamespace.getName(), is("Y"));
         assertThat(innerNamespace.getParent(), is(namespace));
 
-        final Symbol aSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "a", false, false, null, null).getSymbol();
+        final Symbol aSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "a", false, null, null).getSymbol();
         assertThat(aSymbol, is(sameInstance(aSymbolRef.get())));
 
-        final Symbol bSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "X.b", false, false, null, null).getSymbol();
+        final Symbol bSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "X.b", false, null, null).getSymbol();
         assertThat(bSymbol, is(sameInstance(bSymbolRef.get())));
 
-        final Symbol cSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "X.Y.c", false, false, null, null).getSymbol();
+        final Symbol cSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "X.Y.c", false, null, null).getSymbol();
         assertThat(cSymbol, is(sameInstance(cSymbolRef.get())));
 
         assertThat(assembly.getSymbols(), containsInAnyOrder(aSymbol, bSymbol, cSymbol));
@@ -2981,11 +3001,11 @@ public class AssemblyTest {
         step(assembly, AssemblyCompletionStatus.PENDING);
         step(assembly, AssemblyCompletionStatus.COMPLETE);
 
-        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, null, null).getSymbol();
+        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, null, null).getSymbol();
         assertThat(fooSymbol, is(notNullValue()));
         assertThat(fooSymbol, is(instanceOf(UserSymbol.class)));
 
-        final Symbol barSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "bar", false, false, null, null).getSymbol();
+        final Symbol barSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "bar", false, null, null).getSymbol();
         assertThat(barSymbol, is(notNullValue()));
         assertThat(barSymbol, is(instanceOf(UserSymbol.class)));
 
@@ -3005,7 +3025,7 @@ public class AssemblyTest {
                 null);
         final Assembly assembly = createAssembly(nodeThatDefinesASymbolWithUndeterminedValue);
         step(assembly, AssemblyCompletionStatus.COMPLETE);
-        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, null, null).getSymbol();
+        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, null, null).getSymbol();
         assertThat(fooSymbol, is(notNullValue()));
         assertThat(fooSymbol, is(instanceOf(UserSymbol.class)));
         assertThat(assembly.getMessages(), contains(new EquivalentAssemblyMessage(
@@ -3031,7 +3051,7 @@ public class AssemblyTest {
         step(assembly, AssemblyCompletionStatus.PENDING);
         step(assembly, AssemblyCompletionStatus.COMPLETE);
 
-        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, null, null).getSymbol();
+        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, null, null).getSymbol();
         assertThat(fooSymbol, is(notNullValue()));
         assertThat(fooSymbol, is(instanceOf(UserSymbol.class)));
         assertThat(assembly.getMessages(), contains(new EquivalentAssemblyMessage(createError())));
@@ -3053,7 +3073,7 @@ public class AssemblyTest {
                 dummyNode)).setPredefinedSymbols(new PredefinedSymbolTable(Collections.singleton(predefinedSymbol))));
         step(assembly, AssemblyCompletionStatus.COMPLETE);
 
-        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, null, null).getSymbol();
+        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, null, null).getSymbol();
         assertThat(fooSymbol, is(notNullValue()));
         assertThat(fooSymbol, is(instanceOf(UserSymbol.class)));
         assertThat(assembly.getMessages(), contains(new EquivalentAssemblyMessage(
@@ -3073,8 +3093,7 @@ public class AssemblyTest {
             @Override
             protected void assembleCore2(AssemblyBuilder builder) throws IOException {
                 // This symbol reference will be unresolved initially and will trigger a second pass.
-                final Symbol symbol = builder.resolveSymbolReference(SymbolContext.VALUE, "bar", false, false, null, null)
-                        .getSymbol();
+                final Symbol symbol = builder.resolveSymbolReference(SymbolContext.VALUE, "bar", false, null, null).getSymbol();
 
                 Value value = null;
                 if (symbol != null) {
@@ -3100,12 +3119,12 @@ public class AssemblyTest {
         assertThat(assembly.getMessages(), is(empty()));
         assertThat(assembly.getGravity(), is(MessageGravity.NONE));
 
-        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, false, null, null).getSymbol();
+        final Symbol fooSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "foo", false, null, null).getSymbol();
         assertThat(fooSymbol, is(notNullValue()));
         assertThat(fooSymbol, is(instanceOf(UserSymbol.class)));
         assertThat(fooSymbol.getValue(), is((Object) FORTY_TWO));
 
-        final Symbol barSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "bar", false, false, null, null).getSymbol();
+        final Symbol barSymbol = assembly.resolveSymbolReference(SymbolContext.VALUE, "bar", false, null, null).getSymbol();
         assertThat(barSymbol, is(notNullValue()));
         assertThat(barSymbol, is(instanceOf(UserSymbol.class)));
         assertThat(barSymbol.getValue(), is((Object) FORTY_TWO));

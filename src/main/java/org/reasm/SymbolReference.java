@@ -42,8 +42,6 @@ public final class SymbolReference {
     private final List<? extends SymbolContext<?>> contexts;
     @Nonnull
     private final String name;
-    private final boolean bypassNamespaceResolution;
-    private final boolean isDefinition;
     @Nonnull
     private final SymbolLookupContext lookupContext;
     @CheckForNull
@@ -52,6 +50,8 @@ public final class SymbolReference {
     private final Scope scope;
     @CheckForNull
     private final SymbolResolutionFallback symbolResolutionFallback;
+    @CheckForNull
+    private final String definedName;
     @CheckForNull
     private final Symbol symbol;
     @CheckForNull
@@ -66,11 +66,6 @@ public final class SymbolReference {
      *            the name of the symbol to look up
      * @param local
      *            <code>true</code> to look up a local symbol; otherwise, <code>false</code>
-     * @param bypassNamespaceResolution
-     *            <code>true</code> to bypass namespace resolution, or <code>false</code> to perform namespace resolution. If the
-     *            assembly is currently in a namespace, the namespace's name will be prepended, followed by a '.', to the specified
-     *            symbol name, and this will be repeated for each parent namespace. Specify <code>true</code> if the symbol name is
-     *            already fully qualified.
      * @param isDefinition
      *            <code>true</code> if this symbol reference is a definition of the symbol; otherwise, <code>false</code>
      * @param lookupContext
@@ -82,12 +77,10 @@ public final class SymbolReference {
      *            found
      */
     SymbolReference(@Nonnull ImmutableList<? extends SymbolContext<?>> contexts, @Nonnull String name, boolean local,
-            boolean bypassNamespaceResolution, boolean isDefinition, @Nonnull SymbolLookupContext lookupContext,
-            @CheckForNull AssemblyStep step, @CheckForNull SymbolResolutionFallback symbolResolutionFallback) {
+            boolean isDefinition, @Nonnull SymbolLookupContext lookupContext, @CheckForNull AssemblyStep step,
+            @CheckForNull SymbolResolutionFallback symbolResolutionFallback) {
         this.contexts = contexts;
         this.name = lookupContext.expandSymbol(name, local);
-        this.bypassNamespaceResolution = bypassNamespaceResolution;
-        this.isDefinition = isDefinition;
         this.lookupContext = lookupContext;
         this.step = step;
         if (local) {
@@ -97,19 +90,17 @@ public final class SymbolReference {
         }
 
         this.symbolResolutionFallback = symbolResolutionFallback;
-        this.symbol = this.lookupContext.resolveSymbolReference(this, false);
+
+        if (isDefinition) {
+            this.definedName = lookupContext.getDefinedName(this.name, local, Assembly.isSuffixSymbolName(name));
+        } else {
+            this.definedName = null;
+        }
+
+        this.symbol = lookupContext.resolveSymbolReference(this, false);
         if (this.symbol != null) {
             this.value = this.symbol.getValue();
         }
-    }
-
-    /**
-     * Gets a value indicating whether this symbol reference bypasses namespace resolution.
-     *
-     * @return <code>true</code> if this symbol reference bypasses namespace resolution; otherwise, <code>false</code>
-     */
-    public final boolean bypassNamespaceResolution() {
-        return this.bypassNamespaceResolution;
     }
 
     /**
@@ -130,6 +121,15 @@ public final class SymbolReference {
     @Nonnull
     public final List<? extends SymbolContext<?>> getContexts() {
         return this.contexts;
+    }
+
+    /**
+     * Gets the full name of the symbol that this symbol reference defined.
+     *
+     * @return the full name of the defined symbol, or <code>null</code> if this symbol reference is not a definition
+     */
+    public final String getDefinedName() {
+        return this.definedName;
     }
 
     /**
@@ -170,15 +170,6 @@ public final class SymbolReference {
     @CheckForNull
     public final Object getValue() {
         return this.value;
-    }
-
-    /**
-     * Gets a value indicating whether this symbol reference is a definition of the symbol.
-     *
-     * @return <code>true</code> if this symbol reference is a definition of the symbol; otherwise, <code>false</code>
-     */
-    public final boolean isDefinition() {
-        return this.isDefinition;
     }
 
     /**

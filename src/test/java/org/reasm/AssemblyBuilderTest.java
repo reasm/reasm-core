@@ -406,8 +406,8 @@ public class AssemblyBuilderTest {
 
     /**
      * Asserts that
-     * {@link AssemblyBuilder#resolveSymbolReference(List, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
-     * throws a {@link NullPointerException} when the <code>contexts</code> argument contains a <code>null</code> element.
+     * {@link AssemblyBuilder#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)} throws a
+     * {@link NullPointerException} when the <code>contexts</code> argument contains a <code>null</code> element.
      */
     @Test
     public void resolveSymbolReferenceListStringBooleanBooleanSymbolResolutionFallbackNullContext() {
@@ -415,7 +415,7 @@ public class AssemblyBuilderTest {
                 "resolveSymbolReference(List, String, boolean, boolean, SymbolResolutionFallback)") {
             @Override
             void assembleCore3(AssemblyBuilder builder, SymbolContext<?> nil) {
-                builder.resolveSymbolReference(Arrays.asList(nil), "foo", false, false, null, null);
+                builder.resolveSymbolReference(Arrays.asList(nil), "foo", false, null, null);
             }
         };
 
@@ -424,8 +424,8 @@ public class AssemblyBuilderTest {
 
     /**
      * Asserts that
-     * {@link AssemblyBuilder#resolveSymbolReference(List, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
-     * throws a {@link NullPointerException} when the <code>contexts</code> argument is <code>null</code>.
+     * {@link AssemblyBuilder#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)} throws a
+     * {@link NullPointerException} when the <code>contexts</code> argument is <code>null</code>.
      */
     @Test
     public void resolveSymbolReferenceListStringBooleanBooleanSymbolResolutionFallbackNullContexts() {
@@ -433,7 +433,7 @@ public class AssemblyBuilderTest {
                 "resolveSymbolReference(List, String, boolean, boolean, SymbolResolutionFallback)") {
             @Override
             void assembleCore3(AssemblyBuilder builder, List<SymbolContext<?>> nil) {
-                builder.resolveSymbolReference(nil, "foo", false, false, null, null);
+                builder.resolveSymbolReference(nil, "foo", false, null, null);
             }
         };
 
@@ -442,8 +442,8 @@ public class AssemblyBuilderTest {
 
     /**
      * Asserts that
-     * {@link AssemblyBuilder#resolveSymbolReference(List, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
-     * throws a {@link NullPointerException} when the <code>name</code> argument is <code>null</code>.
+     * {@link AssemblyBuilder#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)} throws a
+     * {@link NullPointerException} when the <code>name</code> argument is <code>null</code>.
      */
     @Test
     public void resolveSymbolReferenceListStringBooleanBooleanSymbolResolutionFallbackNullName() {
@@ -451,7 +451,7 @@ public class AssemblyBuilderTest {
                 "resolveSymbolReference(List, String, boolean, boolean, SymbolResolutionFallback)") {
             @Override
             void assembleCore3(AssemblyBuilder builder, String nil) {
-                builder.resolveSymbolReference(ImmutableList.of(SymbolContext.VALUE), nil, false, false, null, null);
+                builder.resolveSymbolReference(ImmutableList.of(SymbolContext.VALUE), nil, false, null, null);
             }
         };
 
@@ -460,7 +460,7 @@ public class AssemblyBuilderTest {
 
     /**
      * Asserts that
-     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
      * throws a {@link NullPointerException} when the <code>contexts</code> argument contains a <code>null</code> element.
      */
     @Test
@@ -469,7 +469,7 @@ public class AssemblyBuilderTest {
                 "resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolResolutionFallback)") {
             @Override
             void assembleCore3(AssemblyBuilder builder, SymbolContext<?> nil) {
-                builder.resolveSymbolReference(new SymbolContext<?>[] { nil }, "foo", false, false, null, null);
+                builder.resolveSymbolReference(new SymbolContext<?>[] { nil }, "foo", false, null, null);
             }
         };
 
@@ -478,7 +478,7 @@ public class AssemblyBuilderTest {
 
     /**
      * Asserts that
-     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
      * throws a {@link NullPointerException} when the <code>contexts</code> argument is <code>null</code>.
      */
     @Test
@@ -487,7 +487,7 @@ public class AssemblyBuilderTest {
                 "resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolResolutionFallback)") {
             @Override
             void assembleCore3(AssemblyBuilder builder, SymbolContext<?>[] nil) {
-                builder.resolveSymbolReference(nil, "foo", false, false, null, null);
+                builder.resolveSymbolReference(nil, "foo", false, null, null);
             }
         };
 
@@ -496,7 +496,7 @@ public class AssemblyBuilderTest {
 
     /**
      * Asserts that
-     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
      * throws a {@link NullPointerException} when the <code>name</code> argument is <code>null</code>.
      */
     @Test
@@ -505,7 +505,7 @@ public class AssemblyBuilderTest {
                 "resolveSymbolReference(SymbolContext[], String, boolean, boolean, SymbolResolutionFallback)") {
             @Override
             void assembleCore3(AssemblyBuilder builder, String nil) {
-                builder.resolveSymbolReference(new SymbolContext[] { SymbolContext.VALUE }, nil, false, false, null, null);
+                builder.resolveSymbolReference(new SymbolContext[] { SymbolContext.VALUE }, nil, false, null, null);
             }
         };
 
@@ -514,7 +514,7 @@ public class AssemblyBuilderTest {
 
     /**
      * Asserts that
-     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
      * throws a {@link NullPointerException} when the <code>context</code> argument is <code>null</code>.
      */
     @Test
@@ -523,7 +523,7 @@ public class AssemblyBuilderTest {
                 "resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolResolutionFallback)") {
             @Override
             void assembleCore3(AssemblyBuilder builder, SymbolContext<?> nil) {
-                builder.resolveSymbolReference(nil, "foo", false, false, null, null);
+                builder.resolveSymbolReference(nil, "foo", false, null, null);
             }
         };
 
@@ -532,7 +532,7 @@ public class AssemblyBuilderTest {
 
     /**
      * Asserts that
-     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+     * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
      * throws a {@link NullPointerException} when the <code>name</code> argument is <code>null</code>.
      */
     @Test
@@ -541,7 +541,7 @@ public class AssemblyBuilderTest {
                 "resolveSymbolReference(SymbolContext, String, boolean, boolean, SymbolResolutionFallback)") {
             @Override
             void assembleCore3(AssemblyBuilder builder, String nil) {
-                builder.resolveSymbolReference(SymbolContext.VALUE, nil, false, false, null, null);
+                builder.resolveSymbolReference(SymbolContext.VALUE, nil, false, null, null);
             }
         };
 
