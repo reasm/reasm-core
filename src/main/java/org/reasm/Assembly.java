@@ -157,6 +157,7 @@ public final class Assembly {
     // The following fields apply to the current pass only. They will be reset when a new pass starts.
     private final OutputImpl output;
     private long programCounter;
+    private int macroCounter;
     private int forwCounter;
     private int backCounter;
     @CheckForNull
@@ -886,6 +887,11 @@ public final class Assembly {
         return this.symbolTable;
     }
 
+    /** @see AssemblyBuilder#incrementMacroCounter() */
+    final int incrementMacroCounter() {
+        return ++this.macroCounter;
+    }
+
     /** @see AssemblyBuilder#processIOException(IOException) */
     final void processIOException(@Nonnull IOException exception, @CheckForNull AssemblyStep step) {
         this.addMessage(new IOErrorMessage(exception), step);
@@ -1066,6 +1072,7 @@ public final class Assembly {
     private final void startPass() {
         this.steps.clear();
         this.programCounter = 0;
+        this.macroCounter = 0;
         this.forwCounter = 0;
         this.backCounter = 0;
         this.currentScopeKey = null;

@@ -369,6 +369,16 @@ public final class AssemblyBuilder {
     }
 
     /**
+     * Increments the macro counter and returns the new value. This counter can be used to generate unique symbol names in macros.
+     *
+     * @return the incremented macro counter
+     */
+    public final int incrementMacroCounter() {
+        this.checkState();
+        return this.assembly.incrementMacroCounter();
+    }
+
+    /**
      * Adds an assembly fatal error message for an {@link IOException}.
      *
      * @param exception

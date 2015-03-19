@@ -14,10 +14,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.CheckForNull;
@@ -39,6 +41,7 @@ import ca.fragag.text.DocumentReader;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * Test class for {@link Assembly}, {@link AssemblyBuilder}, {@link AssemblyStep}, {@link AssemblyStepLocationGenerator},
@@ -61,6 +64,13 @@ public class AssemblyTest {
     private static final FloatValue THREE_POINT_TWENTY_FIVE = new FloatValue(3.25);
 
     static final SymbolContext<Object> DUMMY_SYMBOL_CONTEXT = new SymbolContext<>(Object.class);
+
+    private static final Function<UserSymbol, AssemblyStep> MAP_USER_SYMBOL_TO_DEFINITION = new Function<UserSymbol, AssemblyStep>() {
+        @Override
+        public AssemblyStep apply(UserSymbol input) {
+            return input.getDefinition();
+        }
+    };
 
     static AssemblyErrorMessage createError() {
         return new AssemblyErrorMessage("test") {
@@ -208,6 +218,21 @@ public class AssemblyTest {
         assertThat(assembly.getGravity(), is(MessageGravity.ERROR));
         nodeThatDefinesASymbol.assertAssembleCount(1);
         assertThat(assembly.getSymbols(), is(emptyIterable()));
+    }
+
+    private static AssemblyStepLocation findLocationOfLastSymbolDefinition(Assembly assembly) {
+        final HashSet<AssemblyStep> stepsWithDefinitions = new HashSet<>();
+
+        Iterables.addAll(stepsWithDefinitions, Iterables.transform(assembly.getSymbols(), MAP_USER_SYMBOL_TO_DEFINITION));
+
+        for (int i = assembly.getSteps().size() - 1; i >= 0; i--) {
+            AssemblyStep assemblyStep = assembly.getSteps().get(i);
+            if (stepsWithDefinitions.contains(assemblyStep)) {
+                return assemblyStep.getLocation();
+            }
+        }
+
+        throw new AssertionError("The assembly has no symbol definitions");
     }
 
     private static void redefineError(@Nonnull SymbolType symbolTypeOnRedefinition,
@@ -1576,6 +1601,32 @@ public class AssemblyTest {
     }
 
     /**
+     * Asserts that {@link Assembly#incrementMacroCounter()} increments the macro counter by one.
+     */
+    @Test
+    public void incrementMacroCounter() {
+        final AtomicInteger expectedMacroCounter = new AtomicInteger();
+
+        final TestSourceNode nodeThatIncrementsTheMacroCounter = new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
+                assertThat(builder.incrementMacroCounter(), is(expectedMacroCounter.incrementAndGet()));
+            }
+        };
+
+        final SourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatIncrementsTheMacroCounter,
+                nodeThatIncrementsTheMacroCounter, nodeThatIncrementsTheMacroCounter));
+        final Assembly assembly = createAssembly(rootNode);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.COMPLETE);
+
+        nodeThatIncrementsTheMacroCounter.assertAssembleCount(3);
+        assertThat(expectedMacroCounter.get(), is(3));
+    }
+
+    /**
      * Asserts that {@link Assembly#isAnonymousSymbolReference(String)} returns the expected result for various inputs.
      */
     @Test
@@ -2478,16 +2529,45 @@ public class AssemblyTest {
         final TestSourceNode nodeThatDefinesTheSuffixBazSymbol = createNodeThatDefinesASymbol(".baz", false, SymbolType.CONSTANT,
                 FORTY_TWO);
         final TestSourceNode nodeThatReferencesTheFooSymbol = createNodeThatReferencesASymbol("foo");
+        final TestSourceNode nodeThatDefinesAForwardAnonymousSymbol = createNodeThatDefinesASymbol("+", SymbolType.CONSTANT,
+                FORTY_TWO);
+        final TestSourceNode nodeThatDefinesABackwardAnonymousSymbol = createNodeThatDefinesASymbol("-", SymbolType.CONSTANT,
+                FORTY_TWO);
         final TestSourceNode nodeThatDefinesTheFooSymbol = createNodeThatDefinesASymbol("foo", SymbolType.CONSTANT, FORTY_TWO);
+        final TestSourceNode nodeThatIncrementsTheMacroCounter = new TestSourceNode() {
+            @Override
+            protected void assembleCore2(AssemblyBuilder builder) throws IOException {
+                builder.incrementMacroCounter();
+            }
+        };
+        final TestSourceNode nodeThatDoesNothing = createNodeThatDoesNothing();
         final SourceNode rootNode = new SimpleCompositeSourceNode(Arrays.asList(nodeThatDefinesTheLocalBarSymbol,
-                nodeThatDefinesTheSuffixBazSymbol, nodeThatReferencesTheFooSymbol, nodeThatDefinesTheFooSymbol));
+                nodeThatDefinesTheSuffixBazSymbol, nodeThatReferencesTheFooSymbol, nodeThatDefinesAForwardAnonymousSymbol,
+                nodeThatDefinesABackwardAnonymousSymbol, nodeThatDefinesTheFooSymbol, nodeThatIncrementsTheMacroCounter,
+                nodeThatDoesNothing));
         final Assembly assembly = createAssembly(rootNode);
 
         step(assembly, AssemblyCompletionStatus.PENDING);
         step(assembly, AssemblyCompletionStatus.PENDING);
         step(assembly, AssemblyCompletionStatus.PENDING);
         step(assembly, AssemblyCompletionStatus.PENDING);
-        step(assembly, AssemblyCompletionStatus.STARTED_NEW_PASS);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+        step(assembly, AssemblyCompletionStatus.PENDING);
+
+        // Capture this before the list of steps is cleared.
+        final AssemblyStepLocation locationOfLastSymbolDefinition = findLocationOfLastSymbolDefinition(assembly);
+        step(assembly, AssemblyCompletionStatus.STARTED_NEW_PASS); // nodeThatDoesNothing
+
+        nodeThatDefinesTheLocalBarSymbol.assertAssembleCount(1);
+        nodeThatDefinesTheSuffixBazSymbol.assertAssembleCount(1);
+        nodeThatReferencesTheFooSymbol.assertAssembleCount(1);
+        nodeThatDefinesAForwardAnonymousSymbol.assertAssembleCount(1);
+        nodeThatDefinesABackwardAnonymousSymbol.assertAssembleCount(1);
+        nodeThatDefinesTheFooSymbol.assertAssembleCount(1);
+        nodeThatIncrementsTheMacroCounter.assertAssembleCount(1);
+        nodeThatDoesNothing.assertAssembleCount(1);
 
         assertThat(assembly.getSteps(), is(empty()));
         assertThat(assembly.getProgramCounter(), is(0L));
@@ -2495,13 +2575,17 @@ public class AssemblyTest {
         assertThat(assembly.getCurrentNamespace(), is(nullValue()));
         assertThat(assembly.getCurrentPass(), is(2));
 
+        // Check that the macro counter is reset.
+        assertThat(assembly.incrementMacroCounter(), is(1));
+
         // Check that the counters for anonymous symbols are reset.
         assertThat(assembly.resolveSymbolReference(SymbolContext.VALUE, "+", false, null, null).getName(), is("__forw1"));
         assertThat(assembly.resolveSymbolReference(SymbolContext.VALUE, "-", false, null, null).getName(), is("__back0"));
 
         // Check that the scope key is reset.
         step(assembly, AssemblyCompletionStatus.PENDING);
-        assertThat(assembly.getScope(null), is(notNullValue()));
+        assertThat(assembly.getScope(null).getLocalSymbols(), is(not(emptyIterable())));
+        assertThat(assembly.getScope(locationOfLastSymbolDefinition).getLocalSymbols(), is(emptyIterable()));
 
         // Check that the last non-suffix symbol is reset.
         step(assembly, AssemblyCompletionStatus.PENDING);
