@@ -21,6 +21,7 @@ import ca.fragag.Consumer;
 @Immutable
 public abstract class OutputTransformationFactory implements Environment.ObjectWithNames {
 
+    @Nonnull
     private final Set<String> names;
 
     /**

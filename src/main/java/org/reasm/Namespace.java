@@ -9,6 +9,14 @@ import javax.annotation.Nonnull;
 
 /**
  * A namespace. An architecture's syntax may provide directives to define a namespace.
+ * <p>
+ * When a symbol is defined in a namespace, the namespace's fully qualified name plus a <code>'.'</code> character are prefixed to
+ * the symbol's name.
+ * <p>
+ * When a symbol is referenced in a namespace, the symbol is first looked up in that namespace (by prefixing the namespace's fully
+ * qualified name plus a <code>'.'</code> character to the symbol's name). If the lookup finds no symbol, the symbol is looked up in
+ * the parent namespace, or the root namespace if the namespace is not in another namespace, and this repeats until a symbol is
+ * found or the lookup on the root namespace returns no symbol.
  *
  * @author Francis Gagné
  */

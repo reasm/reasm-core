@@ -5,7 +5,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 /**
- * A predefined symbol in a {@link Configuration}.
+ * A predefined symbol in a {@link Configuration}. When an {@linkplain Assembly#Assembly(Configuration) assembly is created} from a
+ * {@link Configuration} that contains predefined symbols, a {@link UserSymbol} is defined for each predefined symbol, using the
+ * values from the predefined symbol.
  *
  * @author Francis Gagné
  */

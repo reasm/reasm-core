@@ -12,8 +12,8 @@ import org.reasm.source.SourceFile;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * A configuration. Configurations describe how some source code is assembled. Different configurations can be created to assemble
- * the same source code differently.
+ * A configuration describes how some source code is assembled. Different configurations can be created to assemble the same source
+ * code differently.
  * <p>
  * This class is immutable.
  *
@@ -164,6 +164,7 @@ public final class Configuration {
      *            the map should be immutable. The Configuration will store a copy of the map.
      * @return the new configuration
      */
+    @Nonnull
     public final Configuration setCustomConfigurationOptions(@Nonnull Map<Object, Object> customConfigurationOptions) {
         if (customConfigurationOptions == null) {
             throw new NullPointerException("customConfigurationOptions");
@@ -180,6 +181,7 @@ public final class Configuration {
      *            the environment in which the source code will be assembled
      * @return the new configuration
      */
+    @Nonnull
     public final Configuration setEnvironment(@Nonnull Environment environment) {
         if (environment == null) {
             throw new NullPointerException("environment");
@@ -201,6 +203,7 @@ public final class Configuration {
      *            names specified in directives that contain file name operands
      * @return the new configuration
      */
+    @Nonnull
     public final Configuration setFileFetcher(@CheckForNull FileFetcher fileFetcher) {
         if (this.fileFetcher == fileFetcher) {
             return this;
@@ -217,6 +220,7 @@ public final class Configuration {
      *            the main source file of the source code to assemble
      * @return the new configuration
      */
+    @Nonnull
     public final Configuration setMainSourceFile(@Nonnull SourceFile mainSourceFile) {
         if (mainSourceFile == null) {
             throw new NullPointerException("mainSourceFile");
@@ -237,6 +241,7 @@ public final class Configuration {
      *            a table of predefined symbols that will be defined in any assembly that is based on this configuration
      * @return the new configuration
      */
+    @Nonnull
     public final Configuration setPredefinedSymbols(@Nonnull PredefinedSymbolTable predefinedSymbols) {
         if (predefinedSymbols == null) {
             throw new NullPointerException("predefinedSymbols");

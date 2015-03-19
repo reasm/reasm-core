@@ -9,7 +9,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 /**
- * An environment. Environments contain a set of architectures that are made available to the assembler.
+ * An environment contains parameters that affect the assembler's behavior or that provide named collections of objects that can be
+ * referenced by the user's code.
  * <p>
  * This class is immutable.
  *
@@ -19,6 +20,7 @@ import javax.annotation.concurrent.Immutable;
 public final class Environment {
 
     interface ObjectWithNames {
+        @Nonnull
         Set<String> getNames();
     }
 

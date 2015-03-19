@@ -35,14 +35,23 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 /**
- * An assembly.
+ * An assembly maintains the state necessary to assemble source code. The class doesn't expose methods to directly maintain that
+ * state; {@link AssemblyBuilder} exposes them, and stops working (by raising an {@link IllegalStateException}) once the assembly is
+ * complete.
+ * <p>
+ * {@linkplain #Assembly(Configuration) Constructing an assembly} doesn't start the assembly process. One must call {@link #step()}
+ * repeatedly until it returns {@link AssemblyCompletionStatus#COMPLETE}.
+ * <p>
+ * All methods except {@link #step()} only read the assembly's state.
  *
  * @author Francis Gagné
  */
 public final class Assembly {
 
+    @Nonnull
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
+    @Nonnull
     private static final Function<Scope, Iterable<UserSymbol>> GET_LOCAL_SYMBOL_TABLE_FROM_SCOPE = new Function<Scope, Iterable<UserSymbol>>() {
         @Override
         public Iterable<UserSymbol> apply(Scope input) {
@@ -392,9 +401,9 @@ public final class Assembly {
     }
 
     /**
-     * Gets the non-local symbols declared or defined in this assembly.
+     * Gets the non-local symbols defined in this assembly.
      *
-     * @return an {@link Iterable} of the non-local symbols declared or defined in this assembly
+     * @return an {@link Iterable} of the non-local symbols defined in this assembly
      */
     @Nonnull
     public final Iterable<UserSymbol> getSymbols() {

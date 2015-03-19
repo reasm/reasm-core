@@ -10,8 +10,9 @@ import org.reasm.Architecture;
 import org.reasm.SubstringBounds;
 
 /**
- * A source location. A source location references a source node in its context (source file and architecture). The text position,
- * line number and line position are available.
+ * A source location references a {@link SourceNode} at a particular position within a particular {@link AbstractSourceFile} and
+ * also indicates which {@link Architecture} parsed the file to produce the {@link SourceNode}. The text position, line number and
+ * line position are available.
  * <p>
  * To obtain SourceLocations, call {@link AbstractSourceFile#getSourceLocations(Architecture)} or
  * {@link SourceLocation#getChildSourceLocations()}.
@@ -103,7 +104,7 @@ public final class SourceLocation {
     }
 
     /**
-     * Gets the architecture under which the source file was parsed and is being assembled.
+     * Gets the architecture under which the source file was parsed.
      *
      * @return the architecture
      */
@@ -114,7 +115,8 @@ public final class SourceLocation {
 
     /**
      * Gets a list of {@link SourceLocation SourceLocations} for the child nodes of {@linkplain #getSourceNode() the source node
-     * referenced by this source location}. The source node must be a {@link CompositeSourceNode}.
+     * referenced by this source location}. The source node must be a {@link CompositeSourceNode}, otherwise a
+     * {@link ClassCastException} will be thrown.
      *
      * @return the list of {@link SourceLocation SourceLocations} for the child nodes
      */
@@ -135,7 +137,9 @@ public final class SourceLocation {
     }
 
     /**
-     * Gets the line number of this source location.
+     * Gets the line number of this source location. The first line in a {@link SourceFile} is line 1. In a
+     * {@link MacroInstantiation}, the line numbers reflect the line numbers of the origin file, so the first line in a
+     * {@link MacroInstantiation} may (and often will) have a line number greater than 1.
      *
      * @return the line number
      */
@@ -144,7 +148,8 @@ public final class SourceLocation {
     }
 
     /**
-     * Gets the position on the line of this source location.
+     * Gets the position on the line of this source location. The first character on a line is at position 1. The position is
+     * counted in UTF-16 code units.
      *
      * @return the line position
      */
@@ -173,7 +178,8 @@ public final class SourceLocation {
     }
 
     /**
-     * Gets the position of the start of the text for the source node in the source file.
+     * Gets the position of the start of the text for the source node in the source file. The first character in the source file is
+     * at text position 0. The position is counted in UTF-16 code units.
      *
      * @return the position of the start of the text
      */

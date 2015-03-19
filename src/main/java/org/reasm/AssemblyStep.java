@@ -8,7 +8,8 @@ import javax.annotation.Nonnull;
 import org.reasm.source.SourceNode;
 
 /**
- * A step of an {@link Assembly}.
+ * A step of an {@link Assembly}. Each call to {@link Assembly#step()} generates an {@link AssemblyStep}, which indicates where this
+ * step is located in the program and what its output was.
  *
  * @author Francis Gagné
  */

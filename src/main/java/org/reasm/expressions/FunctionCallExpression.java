@@ -13,7 +13,7 @@ import org.reasm.ValueVisitor;
 import org.reasm.messages.SubjectOfFunctionCallIsNotFunctionErrorMessage;
 
 /**
- * A function call expression: an expression consisting of a call to a function defined in source code with its arguments.
+ * A function call expression is an expression consisting of a call to a function defined in source code with its arguments.
  *
  * @author Francis Gagné
  */

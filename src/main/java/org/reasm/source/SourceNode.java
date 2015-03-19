@@ -8,22 +8,21 @@ import javax.annotation.concurrent.Immutable;
 
 import org.reasm.Architecture;
 import org.reasm.AssemblyBuilder;
-import org.reasm.AssemblyStep;
 import org.reasm.messages.ParseErrorMessage;
 
 import ca.fragag.text.Document;
 
 /**
- * A node in the abstract syntax tree (AST) of a source file, as parsed by a particular architecture.
+ * A node in the abstract syntax tree (AST) of a source file, as parsed by a particular {@link Architecture}.
  * <p>
- * SourceNode is designed to be immutable and to be sharable &ndash; that is, a node may appear more than once in a tree, or may
- * appear in different trees (especially after re-parsing).
+ * {@link SourceNode} is designed to be immutable and to be sharable &ndash; that is, a node may appear more than once in a tree and
+ * may appear in different trees (especially after re-parsing).
  * <p>
- * SourceNode only stores a length and a parse error. It has no information about where it is within an AST; in fact, it may be in
- * many places in an AST, or in several ASTs. {@link SourceLocation} stores contextual information about a source node.
+ * A {@link SourceNode} only stores a length and a parse error. It has no information about where it is within an AST; in fact, it
+ * may be in many places in an AST, or in several ASTs. {@link SourceLocation} stores contextual information about a source node.
  * <p>
  * The abstract {@link #assembleCore(AssemblyBuilder)} method is called during assembly to perform a step. The method is called on
- * the source node referred to by the {@link AssemblyStep}.
+ * the source node referred to by {@link AssemblyBuilder#getStep()}.
  *
  * @author Francis Gagné
  * @see CompositeSourceNode

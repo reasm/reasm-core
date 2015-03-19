@@ -7,7 +7,7 @@ import javax.annotation.concurrent.Immutable;
 import org.reasm.Value;
 
 /**
- * An expression consisting of an unary operator and its only operand.
+ * An expression consisting of an {@linkplain UnaryOperator unary operator} and its only operand.
  *
  * @author Francis Gagné
  */

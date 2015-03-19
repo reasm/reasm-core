@@ -13,8 +13,15 @@ import com.google.common.collect.ImmutableList;
 /**
  * A reference to a symbol.
  * <p>
- * Create a symbol reference to look up a {@link Symbol} in an assembly. Use the overloads that take an {@link AssemblyBuilder} for
- * symbol references in the user's code, and the overloads that take an {@link Assembly} for tools that inspect an assembly.
+ * Create a symbol reference to look up a {@link Symbol} in an assembly. Use
+ * {@link AssemblyBuilder#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)},
+ * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)} or
+ * {@link AssemblyBuilder#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)}
+ * for symbol references in the user's code, and
+ * {@link Assembly#resolveSymbolReference(List, String, boolean, SymbolLookupContext, SymbolResolutionFallback)},
+ * {@link Assembly#resolveSymbolReference(SymbolContext, String, boolean, SymbolLookupContext, SymbolResolutionFallback)} or
+ * {@link Assembly#resolveSymbolReference(SymbolContext[], String, boolean, SymbolLookupContext, SymbolResolutionFallback)} for
+ * tools that inspect an assembly.
  *
  * @see AssemblyBuilder#defineSymbol(SymbolContext, String, boolean, SymbolType, Object)
  *
@@ -22,6 +29,7 @@ import com.google.common.collect.ImmutableList;
  */
 public final class SymbolReference {
 
+    @Nonnull
     private static final ConcurrentMap<SymbolContext<?>, ImmutableList<? extends SymbolContext<?>>> CONTEXT_SINGLETON_CACHE = new ConcurrentHashMap<>();
 
     @Nonnull

@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import org.reasm.Architecture;
 
 /**
- * A generator of {@link SourceLocation}s in an {@link AbstractSourceFile}.
+ * A generator of {@link SourceLocation SourceLocations} in an {@link AbstractSourceFile}.
  *
  * @author Francis Gagné
  */

@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import javax.annotation.Nonnull;
 
 /**
- * Provides access to the output of an {@link Assembly} or of a {@link TransformationBlock}.
+ * Provides access to the output of an {@link Assembly} or of a transformation block.
  *
  * @author Francis Gagné
  */

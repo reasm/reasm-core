@@ -4,8 +4,10 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
+import org.reasm.expressions.Expression;
+
 /**
- * A value. An expression produces a value when it is evaluated. Values are immutable.
+ * A value is the result of evaluating an {@link Expression}. Values are immutable.
  *
  * @author Francis Gagné
  */

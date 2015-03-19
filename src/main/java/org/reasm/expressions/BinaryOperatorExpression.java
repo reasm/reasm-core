@@ -7,7 +7,7 @@ import javax.annotation.concurrent.Immutable;
 import org.reasm.Value;
 
 /**
- * An expression consisting of a binary operator and its two operands.
+ * An expression consisting of a {@linkplain BinaryOperator binary operator} and its two operands.
  *
  * @author Francis Gagné
  */

@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import javax.annotation.Nonnull;
 
 /**
- * Provides a way to transform the contents of a {@link TransformationBlock} and to write the result to an {@link Assembly}.
+ * Provides a way to transform the contents of a transformation block and to write the result to an {@link Assembly}.
  *
  * @author Francis Gagné
  */

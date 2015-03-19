@@ -8,7 +8,7 @@ import org.reasm.UnsignedIntValue;
 import org.reasm.Value;
 
 /**
- * An expression that evaluates to the program counter.
+ * An expression that evaluates to the {@linkplain EvaluationContext#getProgramCounter() program counter}.
  *
  * @author Francis Gagné
  */
@@ -16,7 +16,7 @@ import org.reasm.Value;
 public final class ProgramCounterExpression extends ValueOrientedExpression {
 
     /**
-     * The unique instance of the ProgramCounterExpression class.
+     * The unique instance of the {@link ProgramCounterExpression} class.
      */
     public static final ProgramCounterExpression INSTANCE = new ProgramCounterExpression();
 

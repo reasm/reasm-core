@@ -4,11 +4,10 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 /**
- * A symbol. Symbols have a name (optional), a type, a value, and to get their value, they must be {@linkplain SymbolReference
- * referenced}.
+ * A symbol has a name (optional), a type and a value. To get a symbol's value, it must be {@linkplain SymbolReference referenced}.
  * <p>
- * {@link UserSymbol} represents symbols that are defined by the user in source code. You can subclass Symbol to represent other
- * kinds of symbols that the user can reference but not define directly in source code.
+ * {@link UserSymbol} represents symbols that are defined by the user in source code. You can subclass {@link Symbol} to represent
+ * other kinds of symbols that the user can reference but not define directly in source code.
  *
  * @author Francis Gagné
  */

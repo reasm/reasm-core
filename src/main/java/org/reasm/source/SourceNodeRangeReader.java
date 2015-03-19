@@ -11,10 +11,10 @@ import ca.fragag.text.DocumentReader;
 import ca.fragag.text.RangedCharSequenceReader;
 
 /**
- * Provides a means to read the characters and/or code points, one at a time, of a range of text in a source node.
+ * Provides a means to read the code points, one at a time, of a range of text in a source node.
  * <p>
- * SourceNodeRangeReader objects may use a {@link SkipHandler} to skip some code points so as to, for example, skip continuation
- * characters to expose a "logical line" as if it was written on a single source line.
+ * {@link SourceNodeRangeReader} objects may use a {@link SkipHandler} to skip some code points so as to, for example, skip
+ * continuation characters to expose a "logical line" as if it was written on a single source line.
  * <p>
  * Instances of this class can be copied through the copy constructor (
  * {@link SourceNodeRangeReader#SourceNodeRangeReader(SourceNodeRangeReader)}) to implement backtracking.

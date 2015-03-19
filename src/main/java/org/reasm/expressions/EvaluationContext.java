@@ -9,7 +9,7 @@ import org.reasm.AssemblyMessage;
 import ca.fragag.Consumer;
 
 /**
- * A set of information and handlers to use during evaluation of an {@link Expression}.
+ * A set of information and handlers to use while evaluating an {@link Expression}.
  *
  * @author Francis Gagné
  */

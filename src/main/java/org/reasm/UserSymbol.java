@@ -8,7 +8,7 @@ import org.reasm.messages.SymbolRedefinedErrorMessage;
 import org.reasm.messages.SymbolRedefinedWithDifferentTypeErrorMessage;
 
 /**
- * A symbol defined by the user in the source code.
+ * A symbol defined by the user in the source code, or {@linkplain PredefinedSymbol predefined}.
  *
  * @author Francis Gagné
  */

@@ -16,10 +16,10 @@ import org.reasm.source.SourceNode;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Contains methods to build an assembly.
+ * Provides methods to build an assembly.
  * <p>
- * The {@link AssemblyBuilder} class exposes methods that allow building an assembly, while the {@link Assembly} class exposes
- * methods that allow consuming an assembly.
+ * The {@link AssemblyBuilder} class exposes methods that allow building an assembly, while the {@link Assembly} class mainly
+ * exposes methods that allow consuming an assembly.
  * <p>
  * Instances of the {@link AssemblyBuilder} class are not thread-safe; i.e., it is not safe to call the mutator methods of this
  * class on the same instance concurrently in different threads. However, it is safe to call those methods on different instances in

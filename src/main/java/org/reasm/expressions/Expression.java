@@ -12,7 +12,7 @@ import org.reasm.ValueVisitor;
 import com.google.common.primitives.UnsignedLongs;
 
 /**
- * An expression. Expressions produce values when they are evaluated.
+ * An expression. Expressions produce {@linkplain Value values} when they are evaluated.
  *
  * @author Francis Gagné
  */

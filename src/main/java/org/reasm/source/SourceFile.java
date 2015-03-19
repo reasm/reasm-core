@@ -13,7 +13,7 @@ import org.reasm.Architecture;
 import ca.fragag.text.Document;
 
 /**
- * A source file. The main source file and each included source file are represented by an instance of the SourceFile class.
+ * A source file. The main source file and each included source file are represented by an instance of the {@link SourceFile} class.
  *
  * @author Francis Gagné
  */

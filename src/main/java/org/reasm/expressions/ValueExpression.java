@@ -9,7 +9,7 @@ import javax.annotation.concurrent.Immutable;
 import org.reasm.Value;
 
 /**
- * An expression that consists of a simple value.
+ * An expression that consists of a simple {@linkplain Value value}.
  *
  * @author Francis Gagné
  */
