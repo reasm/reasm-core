@@ -30,6 +30,11 @@ public final class FunctionValue extends Value {
     }
 
     @Override
+    final <T> T accept(@Nonnull ValueVisitor<T> visitor) {
+        return visitor.visitFunction(this.function);
+    }
+
+    @Override
     public final boolean equals(@CheckForNull Object obj) {
         if (this == obj) {
             return true;
@@ -54,7 +59,7 @@ public final class FunctionValue extends Value {
     public final int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + System.identityHashCode(this.function);
+        result = prime * result + this.function.hashCode();
         return result;
     }
 
@@ -62,11 +67,6 @@ public final class FunctionValue extends Value {
     @Override
     public final String toString() {
         return "FunctionValue [function=" + this.function + "]";
-    }
-
-    @Override
-    final <T> T accept(@Nonnull ValueVisitor<T> visitor) {
-        return visitor.visitFunction(this.function);
     }
 
 }
